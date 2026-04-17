@@ -47,6 +47,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
 
         if (showAddDialog) {
             AddMedicationDialog(
+                isFirst = medications.isEmpty(),
                 onDismiss = { showAddDialog = false },
                 onConfirm = { name, hours, minutes ->
                     viewModel.addMedication(name, hours, minutes)
@@ -69,10 +70,17 @@ fun MedicationItem(medication: Medication, onDelete: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = medication.name, style = MaterialTheme.typography.titleLarge)
-                Text(
-                    text = "Interval: ${medication.intervalHours}h ${medication.intervalMinutes}m",
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                if (medication.orderIndex > 0) {
+                    Text(
+                        text = "Interval: ${medication.intervalHours}h ${medication.intervalMinutes}m from previous",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text(
+                        text = "First medication of the plan",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, contentDescription = "Delete")
@@ -82,14 +90,14 @@ fun MedicationItem(medication: Medication, onDelete: () -> Unit) {
 }
 
 @Composable
-fun AddMedicationDialog(onDismiss: () -> Unit, onConfirm: (String, Int, Int) -> Unit) {
+fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (String, Int, Int) -> Unit) {
     var name by remember { mutableStateOf("") }
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Medication") },
+        title = { Text(if (isFirst) "Add First Medication" else "Add Medication") },
         text = {
             Column {
                 TextField(
@@ -98,27 +106,29 @@ fun AddMedicationDialog(onDismiss: () -> Unit, onConfirm: (String, Int, Int) -> 
                     label = { Text("Medication Name") },
                     modifier = Modifier.fillMaxWidth()
                 )
-                Spacer(modifier = Modifier.height(8.dp))
-                Row {
-                    TextField(
-                        value = hours,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) hours = it },
-                        label = { Text("Hours") },
-                        modifier = Modifier.weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    TextField(
-                        value = minutes,
-                        onValueChange = { if (it.all { char -> char.isDigit() }) minutes = it },
-                        label = { Text("Minutes") },
-                        modifier = Modifier.weight(1f)
+                if (!isFirst) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Row {
+                        TextField(
+                            value = hours,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) hours = it },
+                            label = { Text("Hours") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        TextField(
+                            value = minutes,
+                            onValueChange = { if (it.all { char -> char.isDigit() }) minutes = it },
+                            label = { Text("Minutes") },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    Text(
+                        text = "Interval from previous medication",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
-                Text(
-                    text = "Interval from previous medication",
-                    style = MaterialTheme.typography.bodySmall,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
             }
         },
         confirmButton = {

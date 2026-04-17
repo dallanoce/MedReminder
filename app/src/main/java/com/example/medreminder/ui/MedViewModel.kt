@@ -65,26 +65,10 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
         var currentTime = firstDoseTimestamp
         
         meds.forEach { med ->
-            // In a real app, the interval is FROM THE PREVIOUS medication.
-            // But for the first one, it might be 0 from the "start".
-            // The requirements say: "scheduling distance in hours/minutes from the previous medication".
-            // So if it's the first medication, the interval is relative to the "start" time input?
-            // Actually, "When the user takes their first medication of the day, they input the time... 
-            // calculate... subsequent medications... based on the saved intervals".
-            
-            // Let's assume the first medication in the list is the one taken at the input time.
-            // Or maybe the input time IS the first dose, and we schedule starting from there.
-            
-            // Re-reading: "provide a Name and the Time Interval ... from the previous medication".
-            // So Med 1: Name, Interval (from start? or is Med 1 the start?)
-            // Usually, Med 1 is at T=0. Med 2 is at T=T1+Interval2.
-            
-            // If the user inputs the time of the FIRST dose, then med[0] is at that time.
-            // med[1] is at firstDoseTime + med[1].interval.
-            
             if (med == meds.firstOrNull()) {
-                // First medication is exactly at the input time
-                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
+                // First medication is at the input time. 
+                // Requirement: Don't receive notification for the first medication.
+                // So we do NOT schedule an alarm for the first one.
             } else {
                 // Subsequent medications are at previousTime + their interval
                 currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
