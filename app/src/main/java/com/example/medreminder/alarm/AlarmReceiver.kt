@@ -27,6 +27,18 @@ class AlarmReceiver : BroadcastReceiver() {
         val medId = intent.getIntExtra("MED_ID", -1)
 
         showNotification(context, medName, medId)
+        startAlarmActivity(context, medName, medId)
+    }
+
+    private fun startAlarmActivity(context: Context, medName: String, medId: Int) {
+        val activityIntent = Intent(context, AlarmActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
+                   Intent.FLAG_ACTIVITY_CLEAR_TOP or 
+                   Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("MED_NAME", medName)
+            putExtra("MED_ID", medId)
+        }
+        context.startActivity(activityIntent)
     }
 
     private fun rescheduleAlarms(context: Context) {
