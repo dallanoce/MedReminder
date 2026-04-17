@@ -36,7 +36,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
         ) {
             if (medications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Please set up your therapeutic plan in Settings first.")
+                    Text("Please set up your therapeutic plan in Medication plan first.")
                 }
             } else {
                 Card(

@@ -17,7 +17,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Assignment
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
@@ -32,7 +32,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medreminder.ui.screens.HomeScreen
-import com.example.medreminder.ui.screens.SettingsScreen
+import com.example.medreminder.ui.screens.MedicationPlanScreen
 import com.example.medreminder.ui.theme.MedReminderTheme
 
 class MainActivity : ComponentActivity() {
@@ -162,8 +162,8 @@ fun MedReminderApp() {
                 composable(AppDestinations.HOME.route) {
                     HomeScreen()
                 }
-                composable(AppDestinations.SETTINGS.route) {
-                    SettingsScreen()
+                composable(AppDestinations.MEDICATION_PLAN.route) {
+                    MedicationPlanScreen()
                 }
             }
         }
@@ -176,5 +176,5 @@ enum class AppDestinations(
     val route: String
 ) {
     HOME("Home", Icons.Default.Home, "home"),
-    SETTINGS("Settings", Icons.Default.Settings, "settings"),
+    MEDICATION_PLAN("Medication plan", Icons.Default.Assignment, "medication_plan"),
 }

@@ -17,7 +17,7 @@ import com.example.medreminder.ui.MedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
+fun MedicationPlanScreen(viewModel: MedViewModel = viewModel()) {
     val medications by viewModel.medications.collectAsState()
     var showAddDialog by remember { mutableStateOf(false) }
 

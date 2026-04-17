@@ -16,8 +16,8 @@ MedReminder Development Progress:
 [x] Step 5: Build UI - Foundation (Navigation, Bottom Bar, Theme).
     - Implemented NavigationSuiteScaffold in MainActivity.
     - Created MedViewModel to bridge UI and Data.
-[x] Step 6: Build UI - Settings Screen (Manage Therapeutic Plan: Medications and Intervals).
-    - Implemented SettingsScreen with add/delete medication functionality.
+[x] Step 6: Build UI - Medication Plan Screen (Manage Therapeutic Plan: Medications and Intervals).
+    - Implemented MedicationPlanScreen with add/delete medication functionality.
 [x] Step 7: Build UI - Home Screen (Daily Activation and Schedule View).
     - Implemented HomeScreen with first dose time picker and schedule list.
 [x] Step 8: Implement Permission Handling Flow (Notifications, Exact Alarms).
