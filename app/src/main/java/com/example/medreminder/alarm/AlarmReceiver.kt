@@ -1,0 +1,106 @@
+package com.example.medreminder.alarm
+
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import com.example.medreminder.R
+import com.example.medreminder.data.local.datastore.DataStoreManager
+import com.example.medreminder.data.local.room.AppDatabase
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
+
+class AlarmReceiver : BroadcastReceiver() {
+    override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+            rescheduleAlarms(context)
+            return
+        }
+
+        val medName = intent.getStringExtra("MED_NAME") ?: "Medication"
+        val medId = intent.getIntExtra("MED_ID", -1)
+
+        showNotification(context, medName, medId)
+    }
+
+    private fun rescheduleAlarms(context: Context) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val dataStoreManager = DataStoreManager(context)
+                val firstDoseTime = dataStoreManager.firstDoseTime.first()
+                
+                if (firstDoseTime != null) {
+                    val database = AppDatabase.getDatabase(context)
+                    val medications = database.medicationDao().getAllMedications().first()
+                    val alarmScheduler = AlarmScheduler(context)
+                    
+                    var currentTime = firstDoseTime
+                    medications.forEach { med ->
+                        if (med == medications.firstOrNull()) {
+                            // Only reschedule if the time is in the future
+                            if (currentTime > System.currentTimeMillis()) {
+                                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
+                            }
+                        } else {
+                            currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
+                            if (currentTime > System.currentTimeMillis()) {
+                                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
+                            }
+                        }
+                    }
+                }
+            } finally {
+                pendingResult.finish()
+            }
+        }
+    }
+
+    private fun showNotification(context: Context, medName: String, medId: Int) {
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        val channelId = "med_reminder_channel"
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(
+                channelId,
+                "Medication Reminders",
+                NotificationManager.IMPORTANCE_HIGH
+            ).apply {
+                setBypassDnd(true)
+                enableVibration(true)
+            }
+            notificationManager.createNotificationChannel(channel)
+        }
+
+        val fullScreenIntent = Intent(context, AlarmActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
+            putExtra("MED_NAME", medName)
+            putExtra("MED_ID", medId)
+        }
+        
+        val fullScreenPendingIntent = PendingIntent.getActivity(
+            context,
+            medId,
+            fullScreenIntent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val notificationBuilder = NotificationCompat.Builder(context, channelId)
+            .setSmallIcon(R.drawable.ic_launcher_foreground)
+            .setContentTitle("Time for $medName")
+            .setContentText("Tap to manage your medication")
+            .setPriority(NotificationCompat.PRIORITY_MAX)
+            .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setFullScreenIntent(fullScreenPendingIntent, true)
+            .setAutoCancel(true)
+            .setOngoing(true)
+
+        notificationManager.notify(medId, notificationBuilder.build())
+    }
+}

@@ -1,0 +1,29 @@
+MedReminder Development Progress:
+
+[x] Step 1: Configure AndroidManifest.xml with all necessary permissions (Full-screen intent, Exact Alarms, etc.).
+    - Added POST_NOTIFICATIONS, USE_FULL_SCREEN_INTENT, SCHEDULE_EXACT_ALARM, WAKE_LOCK, VIBRATE, RECEIVE_BOOT_COMPLETED.
+    - Declared AlarmActivity and AlarmReceiver.
+[x] Step 2: Update build.gradle and libs.versions.toml with dependencies (Room, Navigation, DataStore).
+    - Added Room, DataStore, Navigation Compose, and KSP.
+    - Successfully synced Gradle.
+[x] Step 3: Implement Data Layer (Room Database for Medications and DataStore for app state).
+    - Created Medication entity, Dao, and AppDatabase.
+    - Created DataStoreManager for first dose time persistence.
+[x] Step 4: Create Alarm & Notification logic (BroadcastReceiver, AlarmManager, Full-Screen Intent implementation).
+    - Implemented AlarmReceiver to trigger full-screen notifications.
+    - Implemented AlarmActivity for the intrusive alarm UI.
+    - Implemented AlarmScheduler for scheduling and snoozing alarms.
+[x] Step 5: Build UI - Foundation (Navigation, Bottom Bar, Theme).
+    - Implemented NavigationSuiteScaffold in MainActivity.
+    - Created MedViewModel to bridge UI and Data.
+[x] Step 6: Build UI - Settings Screen (Manage Therapeutic Plan: Medications and Intervals).
+    - Implemented SettingsScreen with add/delete medication functionality.
+[x] Step 7: Build UI - Home Screen (Daily Activation and Schedule View).
+    - Implemented HomeScreen with first dose time picker and schedule list.
+[x] Step 8: Implement Permission Handling Flow (Notifications, Exact Alarms).
+    - Added PermissionHandler in MainActivity to request POST_NOTIFICATIONS and SCHEDULE_EXACT_ALARM.
+[x] Step 9: Finalize Alarm Interaction (Snooze functionality, Stop alarm).
+    - Implemented Snooze (5 min delay) and Taken (Dismiss) logic in AlarmActivity.
+[x] Step 10: Final testing and polish.
+    - Implemented BootReceiver logic in AlarmReceiver to reschedule alarms after reboot.
+    - Finalized AndroidManifest.xml for boot completion and permissions.
