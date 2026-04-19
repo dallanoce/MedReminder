@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
@@ -51,13 +52,17 @@ class AlarmActivity : ComponentActivity() {
         }
 
         setContent {
+            val userName by dataStoreManager.userName.collectAsState(initial = null)
+            
             MedReminderTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.errorContainer
                 ) {
                     Column(
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.Center
                     ) {
@@ -66,12 +71,22 @@ class AlarmActivity : ComponentActivity() {
                             fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        val message = if (!userName.isNullOrEmpty()) {
+                            stringResource(R.string.alarm_message, userName!!, medName)
+                        } else {
+                            stringResource(R.string.alarm_message_default, medName)
+                        }
+                        
                         Text(
-                            text = medName,
-                            fontSize = 32.sp,
+                            text = message,
+                            fontSize = 28.sp,
+                            textAlign = TextAlign.Center,
+                            lineHeight = 36.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
+
                         Spacer(modifier = Modifier.height(48.dp))
                         Button(
                             onClick = { 

@@ -23,6 +23,8 @@
     <string name="home_waiting_first_dose">Waiting for first dose time</string>
     <string name="home_interval_from_prev">+ %1$sh %2$sm from previous</string>
     <string name="home_first_med_day">First medication of the day</string>
+    <string name="home_greeting">Ciao %1$s</string>
+    <string name="home_greeting_default">Ciao User</string>
 
     <!-- Medication Plan Screen -->
     <string name="plan_title">Therapeutic Plan</string>
@@ -50,9 +52,14 @@
     <string name="lang_en">English</string>
     <string name="lang_system">System Default</string>
     <string name="select_lang_title">Select Language</string>
+    <string name="user_name_setting_label">User Name</string>
+    <string name="user_name_hint">Enter your name</string>
+    <string name="save_btn">Save</string>
 
     <!-- Alarm Activity -->
     <string name="alarm_title">Time for your medication!</string>
     <string name="alarm_taken_btn">TAKEN</string>
     <string name="alarm_snooze_btn">SNOOZE (5 MIN)</string>
+    <string name="alarm_message">%1$s, it\'s time to take your medication: %2$s</string>
+    <string name="alarm_message_default">It\'s time to take your medication: %1$s</string>
 </resources>

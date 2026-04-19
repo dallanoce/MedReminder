@@ -15,6 +15,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
@@ -26,7 +27,10 @@ class AlarmReceiver : BroadcastReceiver() {
         val medName = intent.getStringExtra("MED_NAME") ?: "Medication"
         val medId = intent.getIntExtra("MED_ID", -1)
 
-        showNotification(context, medName, medId)
+        val dataStoreManager = DataStoreManager(context)
+        val userName = runBlocking { dataStoreManager.userName.first() }
+
+        showNotification(context, medName, medId, userName)
         startAlarmActivity(context, medName, medId)
     }
 
@@ -74,7 +78,7 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotification(context: Context, medName: String, medId: Int) {
+    private fun showNotification(context: Context, medName: String, medId: Int, userName: String?) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "med_reminder_channel"
 
@@ -103,10 +107,16 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
+        val contentText = if (!userName.isNullOrEmpty()) {
+            context.getString(R.string.alarm_message, userName, medName)
+        } else {
+            context.getString(R.string.alarm_message_default, medName)
+        }
+
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle("Time for $medName")
-            .setContentText("Tap to manage your medication")
+            .setContentTitle(context.getString(R.string.alarm_title))
+            .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setFullScreenIntent(fullScreenPendingIntent, true)

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Language
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -32,8 +33,10 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
     val context = LocalContext.current
     val ringtoneUri by viewModel.ringtoneUri.collectAsState()
     val language by viewModel.language.collectAsState()
+    val userName by viewModel.userName.collectAsState()
 
     var showLanguageDialog by remember { mutableStateOf(false) }
+    var showNameDialog by remember { mutableStateOf(false) }
 
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -59,6 +62,20 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.user_name_setting_label)) },
+                    supportingContent = {
+                        Text(userName ?: stringResource(R.string.home_greeting_default).removePrefix("Ciao ").trim())
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Person, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showNameDialog = true
+                    }
+                )
+            }
             item {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.ringtone_setting_label)) },
@@ -103,6 +120,36 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                 )
             }
         }
+    }
+
+    if (showNameDialog) {
+        var nameText by remember { mutableStateOf(userName ?: "") }
+        AlertDialog(
+            onDismissRequest = { showNameDialog = false },
+            title = { Text(stringResource(R.string.user_name_setting_label)) },
+            text = {
+                OutlinedTextField(
+                    value = nameText,
+                    onValueChange = { nameText = it },
+                    label = { Text(stringResource(R.string.user_name_hint)) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.setUserName(nameText)
+                    showNameDialog = false
+                }) {
+                    Text(stringResource(R.string.save_btn))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showNameDialog = false }) {
+                    Text(stringResource(R.string.cancel_btn))
+                }
+            }
+        )
     }
 
     if (showLanguageDialog) {

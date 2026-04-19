@@ -31,6 +31,9 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     val language: StateFlow<String?> = dataStoreManager.language
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val userName: StateFlow<String?> = dataStoreManager.userName
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     fun addMedication(name: String, hours: Int, minutes: Int) {
         viewModelScope.launch {
             val currentMeds = medications.value
@@ -66,6 +69,12 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     fun setLanguage(languageCode: String) {
         viewModelScope.launch {
             dataStoreManager.saveLanguage(languageCode)
+        }
+    }
+
+    fun setUserName(name: String) {
+        viewModelScope.launch {
+            dataStoreManager.saveUserName(name)
         }
     }
 

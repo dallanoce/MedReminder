@@ -23,6 +23,7 @@ import java.util.*
 fun HomeScreen(viewModel: MedViewModel = viewModel()) {
     val medications by viewModel.medications.collectAsState()
     val firstDoseTime by viewModel.firstDoseTime.collectAsState()
+    val userName by viewModel.userName.collectAsState()
     val context = LocalContext.current
 
     Scaffold(
@@ -36,6 +37,17 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            val greeting = if (!userName.isNullOrEmpty()) {
+                stringResource(R.string.home_greeting, userName!!)
+            } else {
+                stringResource(R.string.home_greeting_default)
+            }
+            Text(
+                text = greeting,
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+
             if (medications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(stringResource(R.string.home_empty_state))
