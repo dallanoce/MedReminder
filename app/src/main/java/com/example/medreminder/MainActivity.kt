@@ -18,12 +18,14 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -33,6 +35,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.medreminder.ui.screens.HomeScreen
 import com.example.medreminder.ui.screens.MedicationPlanScreen
+import com.example.medreminder.ui.screens.SettingsScreen
 import com.example.medreminder.ui.theme.MedReminderTheme
 
 class MainActivity : ComponentActivity() {
@@ -88,8 +91,8 @@ fun PermissionHandler(content: @Composable () -> Unit) {
     if (!hasExactAlarmPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Permission Required") },
-            text = { Text("This app needs permission to set exact alarms to remind you of your medication on time.") },
+            title = { Text(stringResource(R.string.perm_required_title)) },
+            text = { Text(stringResource(R.string.perm_required_text)) },
             confirmButton = {
                 Button(onClick = {
                     val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM).apply {
@@ -97,7 +100,7 @@ fun PermissionHandler(content: @Composable () -> Unit) {
                     }
                     context.startActivity(intent)
                 }) {
-                    Text("Grant Permission")
+                    Text(stringResource(R.string.grant_perm_btn))
                 }
             }
         )
@@ -135,10 +138,10 @@ fun MedReminderApp() {
                     icon = {
                         Icon(
                             imageVector = screen.icon,
-                            contentDescription = screen.label
+                            contentDescription = stringResource(screen.labelResId)
                         )
                     },
-                    label = { Text(screen.label) },
+                    label = { Text(stringResource(screen.labelResId)) },
                     selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                     onClick = {
                         navController.navigate(screen.route) {
@@ -165,16 +168,20 @@ fun MedReminderApp() {
                 composable(AppDestinations.MEDICATION_PLAN.route) {
                     MedicationPlanScreen()
                 }
+                composable(AppDestinations.SETTINGS.route) {
+                    SettingsScreen()
+                }
             }
         }
     }
 }
 
 enum class AppDestinations(
-    val label: String,
+    val labelResId: Int,
     val icon: ImageVector,
     val route: String
 ) {
-    HOME("Home", Icons.Default.Home, "home"),
-    MEDICATION_PLAN("Medication plan", Icons.Default.Assignment, "medication_plan"),
+    HOME(R.string.home_label, Icons.Default.Home, "home"),
+    MEDICATION_PLAN(R.string.med_plan_label, Icons.Default.Assignment, "medication_plan"),
+    SETTINGS(R.string.settings_label, Icons.Default.Settings, "settings"),
 }

@@ -25,6 +25,12 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     val firstDoseTime: StateFlow<Long?> = dataStoreManager.firstDoseTime
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
+    val ringtoneUri: StateFlow<String?> = dataStoreManager.ringtoneUri
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
+    val language: StateFlow<String?> = dataStoreManager.language
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
+
     fun addMedication(name: String, hours: Int, minutes: Int) {
         viewModelScope.launch {
             val currentMeds = medications.value
@@ -48,6 +54,18 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
         viewModelScope.launch {
             dataStoreManager.saveFirstDoseTime(timestamp)
             scheduleAllAlarms(timestamp)
+        }
+    }
+
+    fun setRingtoneUri(uri: String) {
+        viewModelScope.launch {
+            dataStoreManager.saveRingtoneUri(uri)
+        }
+    }
+
+    fun setLanguage(languageCode: String) {
+        viewModelScope.launch {
+            dataStoreManager.saveLanguage(languageCode)
         }
     }
 

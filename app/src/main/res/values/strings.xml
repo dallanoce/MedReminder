@@ -1,3 +1,58 @@
 <resources>
     <string name="app_name">MedReminder</string>
+
+    <!-- Navigation -->
+    <string name="home_label">Home</string>
+    <string name="med_plan_label">Medication plan</string>
+    <string name="settings_label">Settings</string>
+
+    <!-- Permissions -->
+    <string name="perm_required_title">Permission Required</string>
+    <string name="perm_required_text">This app needs permission to set exact alarms to remind you of your medication on time.</string>
+    <string name="grant_perm_btn">Grant Permission</string>
+
+    <!-- Home Screen -->
+    <string name="home_title">Daily Schedule</string>
+    <string name="home_empty_state">Please set up your therapeutic plan in Medication plan first.</string>
+    <string name="home_today_plan">Today\'s Plan</string>
+    <string name="home_set_first_dose">SET FIRST DOSE TIME</string>
+    <string name="home_first_dose_at">First dose at: %1$s</string>
+    <string name="home_reset">RESET</string>
+    <string name="home_schedule_title">Schedule</string>
+    <string name="home_scheduled_at">Scheduled at: %1$s</string>
+    <string name="home_waiting_first_dose">Waiting for first dose time</string>
+    <string name="home_interval_from_prev">+ %1$sh %2$sm from previous</string>
+    <string name="home_first_med_day">First medication of the day</string>
+
+    <!-- Medication Plan Screen -->
+    <string name="plan_title">Therapeutic Plan</string>
+    <string name="add_med_desc">Add Medication</string>
+    <string name="plan_empty_state">No medications added yet.</string>
+    <string name="plan_interval_text">Interval: %1$sh %2$sm from previous</string>
+    <string name="plan_first_med_text">First medication of the plan</string>
+    <string name="delete_desc">Delete</string>
+    <string name="add_first_med_title">Add First Medication</string>
+    <string name="add_med_title">Add Medication</string>
+    <string name="med_name_label">Medication Name</string>
+    <string name="hours_label">Hours</string>
+    <string name="minutes_label">Minutes</string>
+    <string name="interval_hint">Interval from previous medication</string>
+    <string name="add_btn">Add</string>
+    <string name="cancel_btn">Cancel</string>
+
+    <!-- Settings Screen -->
+    <string name="settings_title">Settings</string>
+    <string name="ringtone_setting_label">Alarm Ringtone</string>
+    <string name="default_ringtone">Default</string>
+    <string name="select_ringtone_title">Select Alarm Ringtone</string>
+    <string name="language_setting_label">Language</string>
+    <string name="lang_it">Italiano</string>
+    <string name="lang_en">English</string>
+    <string name="lang_system">System Default</string>
+    <string name="select_lang_title">Select Language</string>
+
+    <!-- Alarm Activity -->
+    <string name="alarm_title">Time for your medication!</string>
+    <string name="alarm_taken_btn">TAKEN</string>
+    <string name="alarm_snooze_btn">SNOOZE (5 MIN)</string>
 </resources>

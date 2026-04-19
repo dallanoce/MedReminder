@@ -9,8 +9,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.medreminder.R
 import com.example.medreminder.data.local.room.Medication
 import com.example.medreminder.ui.MedViewModel
 import java.text.SimpleDateFormat
@@ -25,7 +27,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Daily Schedule") })
+            TopAppBar(title = { Text(stringResource(R.string.home_title)) })
         }
     ) { padding ->
         Column(
@@ -36,7 +38,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
         ) {
             if (medications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Please set up your therapeutic plan in Medication plan first.")
+                    Text(stringResource(R.string.home_empty_state))
                 }
             } else {
                 Card(
@@ -45,7 +47,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Text(
-                            text = "Today's Plan",
+                            text = stringResource(R.string.home_today_plan),
                             style = MaterialTheme.typography.headlineSmall
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -71,7 +73,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("SET FIRST DOSE TIME")
+                                Text(stringResource(R.string.home_set_first_dose))
                             }
                         } else {
                             Row(
@@ -80,11 +82,11 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "First dose at: ${formatTime(firstDoseTime!!)}",
+                                    text = stringResource(R.string.home_first_dose_at, formatTime(firstDoseTime!!)),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 TextButton(onClick = { viewModel.clearDay() }) {
-                                    Text("RESET")
+                                    Text(stringResource(R.string.home_reset))
                                 }
                             }
                         }
@@ -93,7 +95,7 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                Text(text = "Schedule", style = MaterialTheme.typography.titleMedium)
+                Text(text = stringResource(R.string.home_schedule_title), style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -113,16 +115,16 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?) {
         headlineContent = { Text(medication.name) },
         supportingContent = {
             if (scheduledTime != null) {
-                Text("Scheduled at: ${formatTime(scheduledTime)}")
+                Text(stringResource(R.string.home_scheduled_at, formatTime(scheduledTime)))
             } else {
-                Text("Waiting for first dose time")
+                Text(stringResource(R.string.home_waiting_first_dose))
             }
         },
         overlineContent = {
             if (medication.orderIndex > 0) {
-                Text("+ ${medication.intervalHours}h ${medication.intervalMinutes}m from previous")
+                Text(stringResource(R.string.home_interval_from_prev, medication.intervalHours, medication.intervalMinutes))
             } else {
-                Text("First medication of the day")
+                Text(stringResource(R.string.home_first_med_day))
             }
         }
     )

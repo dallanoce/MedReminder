@@ -5,6 +5,7 @@ import android.content.Context
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
+import android.net.Uri
 import android.os.*
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,19 +14,27 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
+import com.example.medreminder.R
+import com.example.medreminder.data.local.datastore.DataStoreManager
 import com.example.medreminder.ui.theme.MedReminderTheme
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class AlarmActivity : ComponentActivity() {
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
     private lateinit var alarmScheduler: AlarmScheduler
+    private lateinit var dataStoreManager: DataStoreManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
         alarmScheduler = AlarmScheduler(this)
+        dataStoreManager = DataStoreManager(this)
         
         // Turn screen on and show over lock screen
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
@@ -36,7 +45,10 @@ class AlarmActivity : ComponentActivity() {
         val medName = intent.getStringExtra("MED_NAME") ?: "Medication"
         val medId = intent.getIntExtra("MED_ID", -1)
 
-        startAlarm()
+        lifecycleScope.launch {
+            val savedRingtoneUri = dataStoreManager.ringtoneUri.first()
+            startAlarm(savedRingtoneUri)
+        }
 
         setContent {
             MedReminderTheme {
@@ -50,7 +62,7 @@ class AlarmActivity : ComponentActivity() {
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = "Time for your medication!",
+                            text = stringResource(R.string.alarm_title),
                             fontSize = 20.sp,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -69,7 +81,7 @@ class AlarmActivity : ComponentActivity() {
                             },
                             modifier = Modifier.fillMaxWidth(0.8f)
                         ) {
-                            Text("TAKEN", fontSize = 24.sp)
+                            Text(stringResource(R.string.alarm_taken_btn), fontSize = 24.sp)
                         }
                         Spacer(modifier = Modifier.height(16.dp))
                         OutlinedButton(
@@ -79,7 +91,7 @@ class AlarmActivity : ComponentActivity() {
                             },
                             modifier = Modifier.fillMaxWidth(0.8f)
                         ) {
-                            Text("SNOOZE (5 MIN)", fontSize = 18.sp)
+                            Text(stringResource(R.string.alarm_snooze_btn), fontSize = 18.sp)
                         }
                     }
                 }
@@ -87,9 +99,11 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
-    private fun startAlarm() {
-        val notification = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        ringtone = RingtoneManager.getRingtone(applicationContext, notification).apply {
+    private fun startAlarm(savedRingtoneUri: String?) {
+        val uri = savedRingtoneUri?.let { Uri.parse(it) } 
+            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+            
+        ringtone = RingtoneManager.getRingtone(applicationContext, uri).apply {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 audioAttributes = AudioAttributes.Builder()
                     .setUsage(AudioAttributes.USAGE_ALARM)

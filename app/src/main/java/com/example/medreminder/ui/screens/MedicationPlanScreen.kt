@@ -10,8 +10,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.medreminder.R
 import com.example.medreminder.data.local.room.Medication
 import com.example.medreminder.ui.MedViewModel
 
@@ -23,18 +25,18 @@ fun MedicationPlanScreen(viewModel: MedViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Therapeutic Plan") })
+            TopAppBar(title = { Text(stringResource(R.string.plan_title)) })
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Default.Add, contentDescription = "Add Medication")
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.add_med_desc))
             }
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             if (medications.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("No medications added yet.")
+                    Text(stringResource(R.string.plan_empty_state))
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
@@ -72,18 +74,18 @@ fun MedicationItem(medication: Medication, onDelete: () -> Unit) {
                 Text(text = medication.name, style = MaterialTheme.typography.titleLarge)
                 if (medication.orderIndex > 0) {
                     Text(
-                        text = "Interval: ${medication.intervalHours}h ${medication.intervalMinutes}m from previous",
+                        text = stringResource(R.string.plan_interval_text, medication.intervalHours, medication.intervalMinutes),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 } else {
                     Text(
-                        text = "First medication of the plan",
+                        text = stringResource(R.string.plan_first_med_text),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
             }
             IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, contentDescription = "Delete")
+                Icon(Icons.Default.Delete, contentDescription = stringResource(R.string.delete_desc))
             }
         }
     }
@@ -97,13 +99,13 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (isFirst) "Add First Medication" else "Add Medication") },
+        title = { Text(stringResource(if (isFirst) R.string.add_first_med_title else R.string.add_med_title)) },
         text = {
             Column {
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Medication Name") },
+                    label = { Text(stringResource(R.string.med_name_label)) },
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (!isFirst) {
@@ -112,19 +114,19 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
                         TextField(
                             value = hours,
                             onValueChange = { if (it.all { char -> char.isDigit() }) hours = it },
-                            label = { Text("Hours") },
+                            label = { Text(stringResource(R.string.hours_label)) },
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         TextField(
                             value = minutes,
                             onValueChange = { if (it.all { char -> char.isDigit() }) minutes = it },
-                            label = { Text("Minutes") },
+                            label = { Text(stringResource(R.string.minutes_label)) },
                             modifier = Modifier.weight(1f)
                         )
                     }
                     Text(
-                        text = "Interval from previous medication",
+                        text = stringResource(R.string.interval_hint),
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 4.dp)
                     )
@@ -141,12 +143,12 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
                     }
                 }
             ) {
-                Text("Add")
+                Text(stringResource(R.string.add_btn))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(R.string.cancel_btn))
             }
         }
     )

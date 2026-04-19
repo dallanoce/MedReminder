@@ -1,0 +1,151 @@
+package com.example.medreminder.ui.screens
+
+import android.app.Activity
+import android.content.Intent
+import android.media.RingtoneManager
+import android.net.Uri
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.Language
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.core.os.LocaleListCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.medreminder.R
+import com.example.medreminder.ui.MedViewModel
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
+    val context = LocalContext.current
+    val ringtoneUri by viewModel.ringtoneUri.collectAsState()
+    val language by viewModel.language.collectAsState()
+
+    var showLanguageDialog by remember { mutableStateOf(false) }
+
+    val ringtonePickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI, Uri::class.java)
+            } else {
+                @Suppress("DEPRECATION")
+                result.data?.getParcelableExtra(RingtoneManager.EXTRA_RINGTONE_PICKED_URI)
+            }
+            uri?.let { viewModel.setRingtoneUri(it.toString()) }
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(title = { Text(stringResource(R.string.settings_title)) })
+        }
+    ) { innerPadding ->
+        LazyColumn(
+            modifier = Modifier
+                .padding(innerPadding)
+                .fillMaxSize()
+        ) {
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.ringtone_setting_label)) },
+                    supportingContent = {
+                        val name = ringtoneUri?.let {
+                            RingtoneManager.getRingtone(context, Uri.parse(it))?.getTitle(context)
+                        } ?: stringResource(R.string.default_ringtone)
+                        Text(name)
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Notifications, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, context.getString(R.string.select_ringtone_title))
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, ringtoneUri?.let { Uri.parse(it) })
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
+                        }
+                        ringtonePickerLauncher.launch(intent)
+                    }
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.language_setting_label)) },
+                    supportingContent = {
+                        val languageName = when (language) {
+                            "it" -> stringResource(R.string.lang_it)
+                            "en" -> stringResource(R.string.lang_en)
+                            else -> stringResource(R.string.lang_system)
+                        }
+                        Text(languageName)
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Language, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showLanguageDialog = true
+                    }
+                )
+            }
+        }
+    }
+
+    if (showLanguageDialog) {
+        AlertDialog(
+            onDismissRequest = { showLanguageDialog = false },
+            title = { Text(stringResource(R.string.select_lang_title)) },
+            text = {
+                Column {
+                    LanguageOption(stringResource(R.string.lang_en), "en") {
+                        viewModel.setLanguage("en")
+                        setAppLanguage("en")
+                        showLanguageDialog = false
+                    }
+                    LanguageOption(stringResource(R.string.lang_it), "it") {
+                        viewModel.setLanguage("it")
+                        setAppLanguage("it")
+                        showLanguageDialog = false
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showLanguageDialog = false }) {
+                    Text(stringResource(R.string.cancel_btn))
+                }
+            }
+        )
+    }
+}
+
+@Composable
+fun LanguageOption(label: String, code: String, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(label)
+    }
+}
+
+private fun setAppLanguage(languageCode: String) {
+    val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
+    AppCompatDelegate.setApplicationLocales(appLocale)
+}
