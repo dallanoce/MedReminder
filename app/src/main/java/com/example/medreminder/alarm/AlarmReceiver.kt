@@ -26,21 +26,25 @@ class AlarmReceiver : BroadcastReceiver() {
 
         val medName = intent.getStringExtra("MED_NAME") ?: "Medication"
         val medId = intent.getIntExtra("MED_ID", -1)
+        val isReminder = intent.getBooleanExtra("IS_REMINDER", false)
 
         val dataStoreManager = DataStoreManager(context)
         val userName = runBlocking { dataStoreManager.userName.first() }
+        val reminderOffset = runBlocking { dataStoreManager.reminderOffset.first() }
 
-        showNotification(context, medName, medId, userName)
-        startAlarmActivity(context, medName, medId)
+        showNotification(context, medName, medId, userName, isReminder, reminderOffset)
+        startAlarmActivity(context, medName, medId, isReminder, reminderOffset)
     }
 
-    private fun startAlarmActivity(context: Context, medName: String, medId: Int) {
+    private fun startAlarmActivity(context: Context, medName: String, medId: Int, isReminder: Boolean, reminderOffset: Int) {
         val activityIntent = Intent(context, AlarmActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or 
                    Intent.FLAG_ACTIVITY_CLEAR_TOP or 
                    Intent.FLAG_ACTIVITY_SINGLE_TOP
             putExtra("MED_NAME", medName)
             putExtra("MED_ID", medId)
+            putExtra("IS_REMINDER", isReminder)
+            putExtra("REMINDER_OFFSET", reminderOffset)
         }
         context.startActivity(activityIntent)
     }
@@ -51,6 +55,7 @@ class AlarmReceiver : BroadcastReceiver() {
             try {
                 val dataStoreManager = DataStoreManager(context)
                 val firstDoseTime = dataStoreManager.firstDoseTime.first()
+                val reminderOffset = dataStoreManager.reminderOffset.first()
                 
                 if (firstDoseTime != null) {
                     val database = AppDatabase.getDatabase(context)
@@ -60,15 +65,10 @@ class AlarmReceiver : BroadcastReceiver() {
                     var currentTime = firstDoseTime
                     medications.forEach { med ->
                         if (med == medications.firstOrNull()) {
-                            // Only reschedule if the time is in the future
-                            if (currentTime > System.currentTimeMillis()) {
-                                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
-                            }
+                            scheduleAlarmAndReminder(alarmScheduler, med.id, med.name, currentTime, reminderOffset)
                         } else {
                             currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
-                            if (currentTime > System.currentTimeMillis()) {
-                                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
-                            }
+                            scheduleAlarmAndReminder(alarmScheduler, med.id, med.name, currentTime, reminderOffset)
                         }
                     }
                 }
@@ -78,7 +78,17 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun showNotification(context: Context, medName: String, medId: Int, userName: String?) {
+    private fun scheduleAlarmAndReminder(scheduler: AlarmScheduler, id: Int, name: String, time: Long, offsetMin: Int) {
+        if (time > System.currentTimeMillis()) {
+            scheduler.scheduleAlarm(id, name, time)
+        }
+        val reminderTime = time - (offsetMin * 60 * 1000)
+        if (reminderTime > System.currentTimeMillis()) {
+            scheduler.scheduleAlarm(id, name, reminderTime, isReminder = true)
+        }
+    }
+
+    private fun showNotification(context: Context, medName: String, medId: Int, userName: String?, isReminder: Boolean, reminderOffset: Int) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val channelId = "med_reminder_channel"
 
@@ -98,24 +108,38 @@ class AlarmReceiver : BroadcastReceiver() {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_NO_USER_ACTION
             putExtra("MED_NAME", medName)
             putExtra("MED_ID", medId)
+            putExtra("IS_REMINDER", isReminder)
+            putExtra("REMINDER_OFFSET", reminderOffset)
         }
         
+        val notificationId = if (isReminder) medId + AlarmScheduler.REMINDER_ID_OFFSET else medId
+
         val fullScreenPendingIntent = PendingIntent.getActivity(
             context,
-            medId,
+            notificationId,
             fullScreenIntent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val contentText = if (!userName.isNullOrEmpty()) {
-            context.getString(R.string.alarm_message, userName, medName)
+        val title = if (isReminder) {
+            context.getString(R.string.reminder_title)
         } else {
-            context.getString(R.string.alarm_message_default, medName)
+            context.getString(R.string.alarm_title)
+        }
+
+        val contentText = if (isReminder) {
+            context.getString(R.string.reminder_message, reminderOffset, medName)
+        } else {
+            if (!userName.isNullOrEmpty()) {
+                context.getString(R.string.alarm_message, userName, medName)
+            } else {
+                context.getString(R.string.alarm_message_default, medName)
+            }
         }
 
         val notificationBuilder = NotificationCompat.Builder(context, channelId)
             .setSmallIcon(R.drawable.ic_launcher_foreground)
-            .setContentTitle(context.getString(R.string.alarm_title))
+            .setContentTitle(title)
             .setContentText(contentText)
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
@@ -123,6 +147,6 @@ class AlarmReceiver : BroadcastReceiver() {
             .setAutoCancel(true)
             .setOngoing(true)
 
-        notificationManager.notify(medId, notificationBuilder.build())
+        notificationManager.notify(notificationId, notificationBuilder.build())
     }
 }

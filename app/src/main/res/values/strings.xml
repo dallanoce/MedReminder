@@ -54,12 +54,16 @@
     <string name="select_lang_title">Select Language</string>
     <string name="user_name_setting_label">User Name</string>
     <string name="user_name_hint">Enter your name</string>
+    <string name="reminder_offset_label">Reminder Offset (minutes)</string>
     <string name="save_btn">Save</string>
 
     <!-- Alarm Activity -->
     <string name="alarm_title">Time for your medication!</string>
+    <string name="reminder_title">Upcoming Medication Reminder</string>
     <string name="alarm_taken_btn">TAKEN</string>
+    <string name="alarm_ok_btn">OK</string>
     <string name="alarm_snooze_btn">SNOOZE (5 MIN)</string>
     <string name="alarm_message">%1$s, it\'s time to take your medication: %2$s</string>
     <string name="alarm_message_default">It\'s time to take your medication: %1$s</string>
+    <string name="reminder_message">Remember, there is an upcoming medication in %1$d min: %2$s</string>
 </resources>

@@ -11,16 +11,19 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -34,9 +37,11 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
     val ringtoneUri by viewModel.ringtoneUri.collectAsState()
     val language by viewModel.language.collectAsState()
     val userName by viewModel.userName.collectAsState()
+    val reminderOffset by viewModel.reminderOffset.collectAsState()
 
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showNameDialog by remember { mutableStateOf(false) }
+    var showOffsetDialog by remember { mutableStateOf(false) }
 
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -73,6 +78,20 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                     },
                     modifier = Modifier.clickable {
                         showNameDialog = true
+                    }
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.reminder_offset_label)) },
+                    supportingContent = {
+                        Text("$reminderOffset min")
+                    },
+                    leadingContent = {
+                        Icon(Icons.Default.Timer, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showOffsetDialog = true
                     }
                 )
             }
@@ -146,6 +165,37 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
             },
             dismissButton = {
                 TextButton(onClick = { showNameDialog = false }) {
+                    Text(stringResource(R.string.cancel_btn))
+                }
+            }
+        )
+    }
+
+    if (showOffsetDialog) {
+        var offsetText by remember { mutableStateOf(reminderOffset.toString()) }
+        AlertDialog(
+            onDismissRequest = { showOffsetDialog = false },
+            title = { Text(stringResource(R.string.reminder_offset_label)) },
+            text = {
+                OutlinedTextField(
+                    value = offsetText,
+                    onValueChange = { offsetText = it },
+                    label = { Text("Minutes") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    offsetText.toIntOrNull()?.let { viewModel.setReminderOffset(it) }
+                    showOffsetDialog = false
+                }) {
+                    Text(stringResource(R.string.save_btn))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showOffsetDialog = false }) {
                     Text(stringResource(R.string.cancel_btn))
                 }
             }

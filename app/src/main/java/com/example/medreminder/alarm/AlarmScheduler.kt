@@ -11,7 +11,11 @@ import java.util.Calendar
 class AlarmScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
 
-    fun scheduleAlarm(medId: Int, medName: String, timeInMillis: Long) {
+    companion object {
+        const val REMINDER_ID_OFFSET = 10000
+    }
+
+    fun scheduleAlarm(medId: Int, medName: String, timeInMillis: Long, isReminder: Boolean = false) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             if (!alarmManager.canScheduleExactAlarms()) {
                 val intent = Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
@@ -24,11 +28,14 @@ class AlarmScheduler(private val context: Context) {
         val intent = Intent(context, AlarmReceiver::class.java).apply {
             putExtra("MED_NAME", medName)
             putExtra("MED_ID", medId)
+            putExtra("IS_REMINDER", isReminder)
         }
+
+        val requestCode = if (isReminder) medId + REMINDER_ID_OFFSET else medId
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            medId,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -50,14 +57,21 @@ class AlarmScheduler(private val context: Context) {
 
     fun snoozeAlarm(medId: Int, medName: String) {
         val snoozeTime = System.currentTimeMillis() + 5 * 60 * 1000 // 5 minutes
-        scheduleAlarm(medId, medName, snoozeTime)
+        scheduleAlarm(medId, medName, snoozeTime, isReminder = false)
     }
 
     fun cancelAlarm(medId: Int) {
+        // Cancel main alarm
+        cancelPendingIntent(medId)
+        // Cancel reminder
+        cancelPendingIntent(medId + REMINDER_ID_OFFSET)
+    }
+
+    private fun cancelPendingIntent(requestCode: Int) {
         val intent = Intent(context, AlarmReceiver::class.java)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
-            medId,
+            requestCode,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )

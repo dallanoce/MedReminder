@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -19,6 +20,7 @@ class DataStoreManager(private val context: Context) {
         val RINGTONE_URI_KEY = stringPreferencesKey("ringtone_uri")
         val LANGUAGE_KEY = stringPreferencesKey("language")
         val USER_NAME_KEY = stringPreferencesKey("user_name")
+        val REMINDER_OFFSET_KEY = intPreferencesKey("reminder_offset")
     }
 
     val firstDoseTime: Flow<Long?> = context.dataStore.data
@@ -39,6 +41,11 @@ class DataStoreManager(private val context: Context) {
     val userName: Flow<String?> = context.dataStore.data
         .map { preferences ->
             preferences[USER_NAME_KEY]
+        }
+
+    val reminderOffset: Flow<Int> = context.dataStore.data
+        .map { preferences ->
+            preferences[REMINDER_OFFSET_KEY] ?: 15
         }
 
     suspend fun saveFirstDoseTime(timestamp: Long) {
@@ -62,6 +69,12 @@ class DataStoreManager(private val context: Context) {
     suspend fun saveUserName(name: String) {
         context.dataStore.edit { preferences ->
             preferences[USER_NAME_KEY] = name
+        }
+    }
+
+    suspend fun saveReminderOffset(offset: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[REMINDER_OFFSET_KEY] = offset
         }
     }
 
