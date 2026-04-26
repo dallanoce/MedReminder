@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -28,7 +29,20 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.home_title)) })
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+                            contentDescription = null,
+                            modifier = Modifier.size(32.dp),
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.home_title))
+                    }
+                }
+            )
         }
     ) { padding ->
         Column(
@@ -114,6 +128,13 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                     itemsIndexed(medications) { index, med ->
                         val scheduledTime = calculateScheduledTime(firstDoseTime, medications, index)
                         ScheduleItem(med, scheduledTime)
+                        if (index < medications.lastIndex) {
+                            HorizontalDivider(
+                                modifier = Modifier.padding(vertical = 4.dp),
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
+                        }
                     }
                 }
             }

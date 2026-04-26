@@ -1,5 +1,6 @@
 package com.example.medreminder.alarm
 
+import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -7,8 +8,6 @@ import android.app.PendingIntent
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.media.AudioAttributes
-import android.media.RingtoneManager
 import android.os.Build
 import android.os.PowerManager
 import androidx.core.app.NotificationCompat
@@ -36,10 +35,19 @@ class AlarmReceiver : BroadcastReceiver() {
         val userName = runBlocking { dataStoreManager.userName.first() }
         val reminderOffset = runBlocking { dataStoreManager.reminderOffset.first() }
 
-        showNotification(context, medName, medId, userName, isReminder, reminderOffset)
+        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val keyguardManager = context.getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
         
-        // Try to start activity directly as well
-        startAlarmActivity(context, medName, medId, isReminder, reminderOffset)
+        val isScreenOn = powerManager.isInteractive
+        val isLocked = keyguardManager.isKeyguardLocked
+
+        if (!isScreenOn || isLocked) {
+            // Screen is off or locked: Use notification with fullScreenIntent
+            showNotification(context, medName, medId, userName, isReminder, reminderOffset)
+        } else {
+            // Phone is unlocked and in use: Start activity directly to avoid top banner
+            startAlarmActivity(context, medName, medId, isReminder, reminderOffset)
+        }
     }
 
     private fun startAlarmActivity(context: Context, medName: String, medId: Int, isReminder: Boolean, reminderOffset: Int) {
@@ -57,7 +65,10 @@ class AlarmReceiver : BroadcastReceiver() {
         try {
             context.startActivity(activityIntent)
         } catch (e: Exception) {
-            // Background start might be blocked, notification's fullScreenIntent will handle it
+            // Fallback if background start is blocked
+            val dataStoreManager = DataStoreManager(context)
+            val userName = runBlocking { dataStoreManager.userName.first() }
+            showNotification(context, medName, medId, userName, isReminder, reminderOffset)
         }
     }
 
@@ -102,13 +113,7 @@ class AlarmReceiver : BroadcastReceiver() {
 
     private fun showNotification(context: Context, medName: String, medId: Int, userName: String?, isReminder: Boolean, reminderOffset: Int) {
         val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        val channelId = "med_alarm_channel_v2" // Changed ID to force recreation with new settings
-
-        val alarmSound = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-        val audioAttributes = AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ALARM)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-            .build()
+        val channelId = "med_alarm_channel_v3"
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
@@ -116,11 +121,9 @@ class AlarmReceiver : BroadcastReceiver() {
                 "Medication Alarms",
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = "High priority alarms for medication"
                 setBypassDnd(true)
-                enableVibration(true)
-                vibrationPattern = longArrayOf(0, 500, 500, 500)
-                setSound(alarmSound, audioAttributes)
+                enableVibration(false)
+                setSound(null, null)
                 lockscreenVisibility = Notification.VISIBILITY_PUBLIC
             }
             notificationManager.createNotificationChannel(channel)
@@ -145,12 +148,7 @@ class AlarmReceiver : BroadcastReceiver() {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        val title = if (isReminder) {
-            context.getString(R.string.reminder_title)
-        } else {
-            context.getString(R.string.alarm_title)
-        }
-
+        val title = if (isReminder) context.getString(R.string.reminder_title) else context.getString(R.string.alarm_title)
         val contentText = if (isReminder) {
             context.getString(R.string.reminder_message, reminderOffset, medName)
         } else {
@@ -171,8 +169,8 @@ class AlarmReceiver : BroadcastReceiver() {
             .setContentIntent(fullScreenPendingIntent)
             .setAutoCancel(false)
             .setOngoing(true)
-            .setSound(alarmSound)
-            .setVibrate(longArrayOf(0, 500, 500, 500))
+            .setSound(null)
+            .setVibrate(null)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
 
         notificationManager.notify(notificationId, notificationBuilder.build())
