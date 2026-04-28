@@ -109,9 +109,13 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                             ) {
                                 Text(
                                     text = stringResource(R.string.home_first_dose_at, formatTime(firstDoseTime!!)),
-                                    style = MaterialTheme.typography.bodyLarge
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                TextButton(onClick = { viewModel.clearDay() }) {
+                                TextButton(
+                                    onClick = { viewModel.clearDay() },
+                                    modifier = Modifier.padding(start = 8.dp)
+                                ) {
                                     Text(stringResource(R.string.home_reset))
                                 }
                             }
