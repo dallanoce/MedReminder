@@ -13,6 +13,8 @@ class AlarmScheduler(private val context: Context) {
 
     companion object {
         const val REMINDER_ID_OFFSET = 10000
+        const val DAILY_RESET_ID = 99999
+        const val ACTION_DAILY_RESET = "com.example.medreminder.ACTION_DAILY_RESET"
     }
 
     fun scheduleAlarm(medId: Int, medName: String, timeInMillis: Long, isReminder: Boolean = false) {
@@ -50,6 +52,46 @@ class AlarmScheduler(private val context: Context) {
             alarmManager.setExact(
                 AlarmManager.RTC_WAKEUP,
                 timeInMillis,
+                pendingIntent
+            )
+        }
+    }
+
+    fun scheduleDailyReset() {
+        val intent = Intent(context, AlarmReceiver::class.java).apply {
+            action = ACTION_DAILY_RESET
+        }
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            context,
+            DAILY_RESET_ID,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            timeInMillis = System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, 3)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            
+            // If it's already past 3 AM today, schedule for tomorrow
+            if (timeInMillis <= System.currentTimeMillis()) {
+                add(Calendar.DAY_OF_YEAR, 1)
+            }
+        }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+        } else {
+            alarmManager.setExact(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
                 pendingIntent
             )
         }

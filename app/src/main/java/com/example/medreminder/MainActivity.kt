@@ -33,6 +33,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.medreminder.alarm.AlarmScheduler
 import com.example.medreminder.ui.screens.HomeScreen
 import com.example.medreminder.ui.screens.MedicationPlanScreen
 import com.example.medreminder.ui.screens.SettingsScreen
@@ -41,6 +42,10 @@ import com.example.medreminder.ui.theme.MedReminderTheme
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Schedule the daily 3 AM reset cycle
+        AlarmScheduler(this).scheduleDailyReset()
+
         enableEdgeToEdge()
         setContent {
             MedReminderTheme {

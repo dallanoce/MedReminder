@@ -24,6 +24,12 @@ class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
             rescheduleAlarms(context)
+            AlarmScheduler(context).scheduleDailyReset()
+            return
+        }
+
+        if (intent.action == AlarmScheduler.ACTION_DAILY_RESET) {
+            handleDailyReset(context)
             return
         }
 
@@ -47,6 +53,31 @@ class AlarmReceiver : BroadcastReceiver() {
         } else {
             // Phone is unlocked and in use: Start activity directly to avoid top banner
             startAlarmActivity(context, medName, medId, isReminder, reminderOffset)
+        }
+    }
+
+    private fun handleDailyReset(context: Context) {
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val dataStoreManager = DataStoreManager(context)
+                val database = AppDatabase.getDatabase(context)
+                val medications = database.medicationDao().getAllMedications().first()
+                val alarmScheduler = AlarmScheduler(context)
+
+                // Clear the first dose time
+                dataStoreManager.clearFirstDoseTime()
+
+                // Cancel all existing medication alarms
+                medications.forEach { med ->
+                    alarmScheduler.cancelAlarm(med.id)
+                }
+
+                // Schedule next daily reset
+                alarmScheduler.scheduleDailyReset()
+            } finally {
+                pendingResult.finish()
+            }
         }
     }
 
