@@ -182,12 +182,18 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
 
 ## P2 — Store-review risk and polish
 
-- [ ] **Launcher icon.**
+- [x] **Launcher icon.**
   - `mipmap-anydpi/ic_launcher.xml:3-5` (and `ic_launcher_round.xml`) uses the same full-colour, already-rounded image for the background, foreground and monochrome layers. Launchers then crop it unpredictably, and the themed icon on Android 13+ comes out as a blank shape.
   - `drawable/ic_launcher_foreground.xml` is still the Android Studio robot template, and low-density screens can pick it (lint `IconXmlAndPng`).
   - Fix: regenerate the icon with Image Asset Studio: a glyph inside the 66 dp safe zone, a solid-colour background layer, and a single-colour monochrome layer.
-- [ ] **Notification icon.** `setSmallIcon(R.drawable.ic_launcher_foreground)` (`AlarmReceiver.kt:194`) renders as a solid white square. Add a white-on-transparent `ic_stat_*` vector.
-- [ ] **Home top-bar icon.** Tinting the full-colour image (`HomeScreen.kt:36-39`) paints it as a solid coloured square. Use the monochrome glyph instead.
+  - *Done:*
+    - The original artwork turned out to have the glyph **cut out** (transparent), so launchers showed the wallpaper through the clock and pill. The glyph was traced into a vector (`drawable/ic_launcher_foreground.xml`, inside the safe zone) on the artwork's blue gradient (`ic_launcher_background.xml`); the same glyph is the monochrome layer.
+    - The robot template and the legacy mipmap bitmaps are removed (never used with minSdk 26). The original artwork is kept as `docs/play-store/icon-artwork.webp`, the source for the 512 px store icon.
+    - Verified in the Android 16 app drawer next to the old icon. Themed icons were not checked on a device.
+- [x] **Notification icon.** `setSmallIcon(R.drawable.ic_launcher_foreground)` (`AlarmReceiver.kt:194`) renders as a solid white square. Add a white-on-transparent `ic_stat_*` vector.
+  - *Done:* `drawable/ic_notification.xml` (the glyph, 24 dp). Verified in the status bar and the heads-up.
+- [x] **Home top-bar icon.** Tinting the full-colour image (`HomeScreen.kt:36-39`) paints it as a solid coloured square. Use the monochrome glyph instead.
+  - *Done:* uses `ic_notification`, tinted with the theme colour.
 - [ ] **Localization.**
   - The English strings say "Ciao" (`values/strings.xml:26-27`), and the Italian default greeting is "Ciao User".
   - `SettingsScreen.kt:74` strips "Ciao " off the greeting with `removePrefix`.
