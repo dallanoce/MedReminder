@@ -54,6 +54,8 @@
     <string name="hours_label">Ore</string>
     <string name="minutes_label">Minuti</string>
     <string name="interval_hint">Intervallo dalla medicina precedente</string>
+    <string name="error_interval">Usa 0–24 ore e 0–59 minuti (al massimo 24 ore).</string>
+    <string name="error_med_name_length">Troppo lungo (max %1$d).</string>
     <string name="add_btn">Aggiungi</string>
     <string name="cancel_btn">Annulla</string>
 
@@ -70,6 +72,7 @@
     <string name="user_name_setting_label">Nome Utente</string>
     <string name="user_name_hint">Inserisci il tuo nome</string>
     <string name="reminder_offset_label">Anticipo Promemoria (minuti)</string>
+    <string name="reminder_offset_hint">Minuti prima della dose (0–%1$d). 0 = nessun promemoria.</string>
     <string name="save_btn">Salva</string>
 
     <!-- Alarm Activity -->

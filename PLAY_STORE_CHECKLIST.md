@@ -83,12 +83,16 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
    - *Done (with P1-5):* scheduling always goes through `AlarmScheduler.rescheduleAll()`, which reads the plan, first dose time and offset from storage. Verified on Android 16: offset 30 → reminder at dose −30; changing it to 10 moves the reminder to dose −10 and removes the old one.
 3. [x] **Overdue doses all ring at once.** `MedViewModel.kt:123` schedules each dose without checking that it is in the future (the reminder at line 127 does check). Setting a first-dose time earlier in the day makes every overdue alarm fire immediately.
    - *Done (with P1-5):* only doses and reminders still ahead are scheduled (unit-tested). Verified on Android 16: a first dose 2 h in the past schedules nothing and nothing rings.
-4. [ ] **Integer overflow and no input validation.**
+4. [x] **Integer overflow and no input validation.**
    - `(intervalHours * 3600 + intervalMinutes * 60) * 1000` is computed as `Int` and overflows from about 597 h. Locations: `MedViewModel.kt:120`, `AlarmReceiver.kt:124`, `HomeScreen.kt:176`.
    - `offsetMin * 60 * 1000` has the same problem (`MedViewModel.kt:126`, `AlarmReceiver.kt:139`).
    - The hours/minutes fields accept any number of digits (`MedicationPlanScreen.kt:116,123`), and the offset field accepts negative values (`SettingsScreen.kt:191`).
    - Fix: use `Long` arithmetic (or `kotlin.time.Duration`) and validate ranges, e.g. minutes 0–59, hours 0–24, offset 0–120.
-   - *Overflow done (with P1-5):* `DoseSchedule` computes in `Long` (unit test with a 700 h interval). Input validation is still open.
+   - *Overflow done (with P1-5):* `DoseSchedule` computes in `Long` (unit test with a 700 h interval).
+   - *Validation done:*
+     - New `ui/InputValidation.kt` (5 tests in `InputValidationTest`): interval 0–24 h and 0–59 min (24 h max in total), offset 0–120 (0 = no reminder), name required and at most 40 characters, numeric fields digits only.
+     - The dialogs show the error inline and disable Add/Save while the input is invalid. The offset dialog's hard-coded "Minutes" label is now localized.
+     - Verified on Android 16 for each invalid case.
 5. [x] **The schedule is computed in three places, and they disagree.**
    - `MedViewModel.scheduleAllAlarms` skips the first medication.
    - `AlarmReceiver.rescheduleAlarms` (after a reboot) schedules it (`AlarmReceiver.kt:121`).

@@ -3,6 +3,7 @@ package io.github.dallanoce.medreminder.ui.screens
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -10,11 +11,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
 import io.github.dallanoce.medreminder.data.local.room.Medication
+import io.github.dallanoce.medreminder.ui.InputValidation
 import io.github.dallanoce.medreminder.ui.MedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -97,6 +101,11 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
     var hours by remember { mutableStateOf("") }
     var minutes by remember { mutableStateOf("") }
 
+    val nameTooLong = name.trim().length > InputValidation.MAX_NAME_LENGTH
+    // The first medication has no interval (it's taken at the first dose time)
+    val interval = if (isFirst) 0 to 0 else InputValidation.parseInterval(hours, minutes)
+    val canAdd = InputValidation.isValidMedicationName(name) && interval != null
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (isFirst) R.string.add_first_med_title else R.string.add_med_title)) },
@@ -106,6 +115,11 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
                     value = name,
                     onValueChange = { name = it },
                     label = { Text(stringResource(R.string.med_name_label)) },
+                    singleLine = true,
+                    isError = nameTooLong,
+                    supportingText = if (nameTooLong) {
+                        { Text(stringResource(R.string.error_med_name_length, InputValidation.MAX_NAME_LENGTH)) }
+                    } else null,
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (!isFirst) {
@@ -113,21 +127,28 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
                     Row {
                         TextField(
                             value = hours,
-                            onValueChange = { if (it.all { char -> char.isDigit() }) hours = it },
+                            onValueChange = { hours = InputValidation.digitsOnly(it) },
                             label = { Text(stringResource(R.string.hours_label)) },
+                            singleLine = true,
+                            isError = interval == null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         TextField(
                             value = minutes,
-                            onValueChange = { if (it.all { char -> char.isDigit() }) minutes = it },
+                            onValueChange = { minutes = InputValidation.digitsOnly(it) },
                             label = { Text(stringResource(R.string.minutes_label)) },
+                            singleLine = true,
+                            isError = interval == null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f)
                         )
                     }
                     Text(
-                        text = stringResource(R.string.interval_hint),
+                        text = stringResource(if (interval == null) R.string.error_interval else R.string.interval_hint),
                         style = MaterialTheme.typography.bodySmall,
+                        color = if (interval == null) MaterialTheme.colorScheme.error else Color.Unspecified,
                         modifier = Modifier.padding(top = 4.dp)
                     )
                 }
@@ -136,12 +157,9 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
         confirmButton = {
             Button(
                 onClick = {
-                    val h = hours.toIntOrNull() ?: 0
-                    val m = minutes.toIntOrNull() ?: 0
-                    if (name.isNotBlank()) {
-                        onConfirm(name, h, m)
-                    }
-                }
+                    interval?.let { (h, m) -> onConfirm(name.trim(), h, m) }
+                },
+                enabled = canAdd
             ) {
                 Text(stringResource(R.string.add_btn))
             }

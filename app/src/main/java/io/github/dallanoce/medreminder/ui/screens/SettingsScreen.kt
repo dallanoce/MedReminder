@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
+import io.github.dallanoce.medreminder.ui.InputValidation
 import io.github.dallanoce.medreminder.ui.MedViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -173,24 +174,37 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
 
     if (showOffsetDialog) {
         var offsetText by remember { mutableStateOf(reminderOffset.toString()) }
+        val offset = InputValidation.parseReminderOffset(offsetText)
         AlertDialog(
             onDismissRequest = { showOffsetDialog = false },
             title = { Text(stringResource(R.string.reminder_offset_label)) },
             text = {
                 OutlinedTextField(
                     value = offsetText,
-                    onValueChange = { offsetText = it },
-                    label = { Text("Minutes") },
+                    onValueChange = { offsetText = InputValidation.digitsOnly(it) },
+                    label = { Text(stringResource(R.string.minutes_label)) },
                     singleLine = true,
+                    isError = offset == null,
+                    supportingText = {
+                        Text(
+                            stringResource(
+                                R.string.reminder_offset_hint,
+                                InputValidation.MAX_REMINDER_OFFSET_MINUTES
+                            )
+                        )
+                    },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                TextButton(onClick = {
-                    offsetText.toIntOrNull()?.let { viewModel.setReminderOffset(it) }
-                    showOffsetDialog = false
-                }) {
+                TextButton(
+                    onClick = {
+                        offset?.let { viewModel.setReminderOffset(it) }
+                        showOffsetDialog = false
+                    },
+                    enabled = offset != null
+                ) {
                     Text(stringResource(R.string.save_btn))
                 }
             },

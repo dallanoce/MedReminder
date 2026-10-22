@@ -54,6 +54,8 @@
     <string name="hours_label">Hours</string>
     <string name="minutes_label">Minutes</string>
     <string name="interval_hint">Interval from previous medication</string>
+    <string name="error_interval">Use 0–24 hours and 0–59 minutes (at most 24 hours).</string>
+    <string name="error_med_name_length">Too long (max %1$d).</string>
     <string name="add_btn">Add</string>
     <string name="cancel_btn">Cancel</string>
 
@@ -70,6 +72,7 @@
     <string name="user_name_setting_label">User Name</string>
     <string name="user_name_hint">Enter your name</string>
     <string name="reminder_offset_label">Reminder Offset (minutes)</string>
+    <string name="reminder_offset_hint">Minutes before the dose (0–%1$d). 0 = no reminder.</string>
     <string name="save_btn">Save</string>
 
     <!-- Alarm Activity -->
