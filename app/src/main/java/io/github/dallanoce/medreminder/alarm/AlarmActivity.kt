@@ -165,18 +165,7 @@ class AlarmActivity : ComponentActivity() {
     }
 
     private fun startAlarm(savedRingtoneUri: String?) {
-        val uri = savedRingtoneUri?.let { Uri.parse(it) } 
-            ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            
-        ringtone = RingtoneManager.getRingtone(applicationContext, uri).apply {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                audioAttributes = AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_ALARM)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                    .build()
-            }
-            play()
-        }
+        ringtone = playFirstAvailableSound(savedRingtoneUri)
 
         vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
@@ -187,12 +176,34 @@ class AlarmActivity : ComponentActivity() {
         }
 
         val pattern = longArrayOf(0, 500, 500)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator?.vibrate(pattern, 0)
+        vibrator?.vibrate(VibrationEffect.createWaveform(pattern, 0))
+    }
+
+    /**
+     * Plays the chosen ringtone, falling back to the default alarm and then the default notification
+     * sound when it can't play (e.g. a ringtone that was deleted, or restored from another phone).
+     * The sound loops until the user reacts.
+     */
+    private fun playFirstAvailableSound(savedRingtoneUri: String?): Ringtone? {
+        val candidates = listOfNotNull(
+            savedRingtoneUri?.let { Uri.parse(it) },
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
+            RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+        )
+        for (uri in candidates) {
+            val candidate = RingtoneManager.getRingtone(applicationContext, uri) ?: continue
+            candidate.audioAttributes = AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_ALARM)
+                .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+                .build()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                candidate.isLooping = true
+            }
+            candidate.play()
+            if (candidate.isPlaying) return candidate
+            candidate.stop()
         }
+        return null
     }
 
     private fun stopAlarm() {

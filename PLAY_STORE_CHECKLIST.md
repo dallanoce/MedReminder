@@ -111,10 +111,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
      - Adding or deleting a medication reschedules the day. A delete renumbers the remaining medications in one transaction (`deleteAndRenumber`, replacing the unused `updatePlan`), and new medications get the next free position.
      - Both screens now decide which medication is first from list position.
      - 3 instrumented Room tests in `MedicationDaoTest`. Verified on Android 16: deleting a middle or the first medication and adding a new one moves the alarms accordingly.
-7. [ ] **The alarm sound can crash or stop after one play.**
+7. [x] **The alarm sound can crash or stop after one play.**
    - `RingtoneManager.getRingtone()` returns null when the saved URI no longer exists (e.g. a deleted ringtone, or a backup restored on a new phone). That causes an NPE in `AlarmActivity.kt:171`, which crashes the alarm screen.
    - The ringtone isn't looped, so it plays once and goes quiet.
    - Fix: fall back to the default alarm sound, and set `isLooping = true` (API 28+) or use a looping `MediaPlayer`.
+   - *Done:* the alarm plays the first sound that actually starts: chosen ringtone → default alarm → default notification. It checks `isPlaying`, which also catches a non-null `Ringtone` that plays nothing, and loops. Verified on Android 16: with a nonexistent ringtone the old code rang **silently** (0 alarm players); now the fallback plays and is still playing after 45 s, also with a short sound.
 8. [ ] **Several paths end in a silent alarm or no alarm.**
    - The notification channel has sound and vibration turned off (`AlarmReceiver.kt:155-157`), so all audio comes from the full-screen activity. On Android 14+, if the full-screen intent isn't allowed (`NotificationManager.canUseFullScreenIntent()`), the user only gets a silent heads-up.
    - If `POST_NOTIFICATIONS` is denied, the app shows no rationale and gives no way to re-enable it (`MainActivity.kt:80`). Verified on Android 16: with the phone locked and notifications denied, the screen stays off and nothing appears.
