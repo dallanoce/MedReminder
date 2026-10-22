@@ -18,10 +18,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - the `ACTION_DAILY_RESET` string (`AlarmScheduler.kt:17`)
   - the package assertion in `ExampleInstrumentedTest.kt`
   - *Done:* the app ID, namespace and Kotlin packages are now `io.github.dallanoce.medreminder`.
-- [ ] **Target API 36.** Since 31 Aug 2026, new apps and updates must target Android 16 (API 36). Set `compileSdk = 36` and `targetSdk = 36` (`app/build.gradle.kts:10,15`).
+- [x] **Target API 36.** Since 31 Aug 2026, new apps and updates must target Android 16 (API 36). Set `compileSdk = 36` and `targetSdk = 36` (`app/build.gradle.kts:10,15`).
   - AGP 8.7.3 was only built for API ≤ 35, so upgrade AGP together with Kotlin and KSP. Lint reports 9.4.1 as the latest. AGP 9 is a major release (built-in Kotlin), so the latest 8.x is the smaller step.
   - The API 36 SDK platform is already installed.
   - Then retest the Android 16 changes: edge-to-edge can no longer be opted out of, and predictive back is on by default.
+  - *Done:* compileSdk/targetSdk 36, AGP 9.4.1 (built-in Kotlin, so the `kotlin-android` plugin is removed), Gradle 9.8.2, Kotlin 2.4.21, KSP 2.3.12 (KSP2), Room 2.8.5; `kotlinOptions` was migrated to `compilerOptions`.
+  - *Edge-to-edge retest on Android 16:* found and fixed the status-bar inset being applied twice (an outer `Scaffold` in `MainActivity`). The alarm screen draws correctly.
 - [ ] **Release signing and App Bundle.** There is no `signingConfig` yet.
   - Create an upload keystore and load it from a git-ignored `keystore.properties` (or environment variables).
   - Enroll in Play App Signing.

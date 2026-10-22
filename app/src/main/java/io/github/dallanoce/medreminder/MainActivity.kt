@@ -161,21 +161,21 @@ fun MedReminderApp() {
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            NavHost(
-                navController = navController,
-                startDestination = AppDestinations.HOME.route,
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable(AppDestinations.HOME.route) {
-                    HomeScreen()
-                }
-                composable(AppDestinations.MEDICATION_PLAN.route) {
-                    MedicationPlanScreen()
-                }
-                composable(AppDestinations.SETTINGS.route) {
-                    SettingsScreen()
-                }
+        // Each screen has its own Scaffold/TopAppBar that applies the status bar inset,
+        // so no outer Scaffold here (it would apply the inset twice under edge-to-edge).
+        NavHost(
+            navController = navController,
+            startDestination = AppDestinations.HOME.route,
+            modifier = Modifier.fillMaxSize()
+        ) {
+            composable(AppDestinations.HOME.route) {
+                HomeScreen()
+            }
+            composable(AppDestinations.MEDICATION_PLAN.route) {
+                MedicationPlanScreen()
+            }
+            composable(AppDestinations.SETTINGS.route) {
+                SettingsScreen()
             }
         }
     }

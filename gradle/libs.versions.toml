@@ -1,6 +1,6 @@
 [versions]
-agp = "8.7.3"
-kotlin = "2.1.0"
+agp = "9.4.1"
+kotlin = "2.4.21"
 coreKtx = "1.15.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -12,8 +12,8 @@ coroutines = "1.9.0"
 lifecycleViewModel = "2.8.7"
 navigationCompose = "2.8.4"
 datastore = "1.1.1"
-room = "2.6.1"
-ksp = "2.1.0-1.0.29"
+room = "2.8.5"
+ksp = "2.3.12"
 composeIcons = "1.7.8"
 appcompat = "1.7.0"
 
@@ -46,6 +46,5 @@ androidx-room-compiler = { group = "androidx.room", name = "room-compiler", vers
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 google-devtools-ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
