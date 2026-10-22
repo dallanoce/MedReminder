@@ -61,6 +61,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - [ ] **You:** replace `CONTACT_EMAIL` in the policy, publish it (GitHub Pages: *Settings → Pages → main / docs*), then fill in the forms and the store listing in Play Console.
   - [ ] **You:** create the graphics: 512×512 icon, 1024×500 feature graphic, phone screenshots.
 - [ ] **Closed testing requirement.** Personal developer accounts created after 13 Nov 2023 must run a closed test with ≥ 12 testers opted in for 14 consecutive days before production access can be requested. This has the longest lead time on the list, so start it as soon as a build can be uploaded.
+  - [x] *Prepared:* step-by-step instructions in `docs/RELEASE.md`.
+  - [ ] **You:** recruit 12 testers and run the 14-day closed test in Play Console.
 
 ---
 
