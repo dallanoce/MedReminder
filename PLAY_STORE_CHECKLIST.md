@@ -24,12 +24,14 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - Then retest the Android 16 changes: edge-to-edge can no longer be opted out of, and predictive back is on by default.
   - *Done:* compileSdk/targetSdk 36, AGP 9.4.1 (built-in Kotlin, so the `kotlin-android` plugin is removed), Gradle 9.8.2, Kotlin 2.4.21, KSP 2.3.12 (KSP2), Room 2.8.5; `kotlinOptions` was migrated to `compilerOptions`.
   - *Edge-to-edge retest on Android 16:* found and fixed the status-bar inset being applied twice (an outer `Scaffold` in `MainActivity`). The alarm screen draws correctly.
-- [ ] **Release signing and App Bundle.** There is no `signingConfig` yet.
+- [x] **Release signing and App Bundle (build setup).** There is no `signingConfig` yet.
   - Create an upload keystore and load it from a git-ignored `keystore.properties` (or environment variables).
   - Enroll in Play App Signing.
   - Upload the `.aab` produced by `./gradlew bundleRelease`. New apps can't be uploaded as APKs.
   - Add `*.jks`, `*.keystore` and `keystore.properties` to `.gitignore`.
   - Back up the key and its passwords somewhere safe.
+  - *Done:* `app/build.gradle.kts` signs release builds from `keystore.properties` and stays unsigned without it. Added `keystore.properties.example`, `docs/RELEASE.md` and the ignore rules. Verified with a throwaway key: the AAB passes `jarsigner` and the APK passes `apksigner`.
+  - [ ] **You:** create the real upload key and `keystore.properties` (steps in `docs/RELEASE.md`) and back them up. Keep Play App Signing enabled on the first upload.
 - [ ] **Clean up permissions** (`app/src/main/AndroidManifest.xml`):
   - **Keep** `SYSTEM_ALERT_WINDOW` (line 12) and actually request it. Tested on Android 16: it's the only thing that lets the alarm take over the screen while the phone is unlocked and in use (see P1-9). Today it's declared but never requested, so it has no effect.
   - Remove `USE_EXACT_ALARM` (line 8). Play reserves it for alarm-clock/timer and calendar apps, so a medication reminder risks rejection. Keep `SCHEDULE_EXACT_ALARM`, which the app already has a grant flow for.
