@@ -75,6 +75,12 @@
     <string name="reminder_offset_hint">Minutes before the dose (0–%1$d). 0 = no reminder.</string>
     <string name="save_btn">Save</string>
 
+    <!-- Notification channels -->
+    <string name="channel_dose_alarms">Dose alarms</string>
+    <string name="channel_dose_alarms_desc">Rings at the time of each dose until you confirm it.</string>
+    <string name="channel_reminders">Upcoming dose reminders</string>
+    <string name="channel_reminders_desc">Lets you know a few minutes before each dose.</string>
+
     <!-- Alarm Activity -->
     <string name="alarm_title">Time for your medication!</string>
     <string name="reminder_title">Upcoming Medication Reminder</string>

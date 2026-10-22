@@ -116,24 +116,44 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
    - The ringtone isn't looped, so it plays once and goes quiet.
    - Fix: fall back to the default alarm sound, and set `isLooping = true` (API 28+) or use a looping `MediaPlayer`.
    - *Done:* the alarm plays the first sound that actually starts: chosen ringtone → default alarm → default notification. It checks `isPlaying`, which also catches a non-null `Ringtone` that plays nothing, and loops. Verified on Android 16: with a nonexistent ringtone the old code rang **silently** (0 alarm players); now the fallback plays and is still playing after 45 s, also with a short sound.
-8. [ ] **Several paths end in a silent alarm or no alarm.**
+8. [x] **Several paths end in a silent alarm or no alarm.**
    - The notification channel has sound and vibration turned off (`AlarmReceiver.kt:155-157`), so all audio comes from the full-screen activity. On Android 14+, if the full-screen intent isn't allowed (`NotificationManager.canUseFullScreenIntent()`), the user only gets a silent heads-up.
    - If `POST_NOTIFICATIONS` is denied, the app shows no rationale and gives no way to re-enable it (`MainActivity.kt:80`). Verified on Android 16: with the phone locked and notifications denied, the screen stays off and nothing appears.
    - Fix part 1: create a new channel ID with alarm sound (`USAGE_ALARM`) and vibration, and set `FLAG_INSISTENT` on the notification.
    - Fix part 2: add Taken / Snooze action buttons to the notification.
    - Fix part 3: show a persistent warning on Home, with a Settings deep link, whenever notifications, full-screen intents or exact alarms are disabled. *(Done with P0 permissions: Home banner + setup screen.)*
-9. [ ] **When the phone is unlocked and in use, the alert is lost completely (verified on Android 16).**
+   - *Done (with P1-9):*
+     - New `AlarmNotifications`: the dose notification rings on the alarm stream, vibrates and repeats (`FLAG_INSISTENT`) until the user reacts. Its channel id carries the chosen ringtone, because channel sounds can't change, and falls back to the default alarm sound when the ringtone can't be read.
+     - The notification has Taken / Snooze buttons, handled by `AlarmActionReceiver` (not exported).
+     - The alarm screen plays its own sound only when the notification can't (the app's notifications or the channel's sound are off).
+9. [x] **When the phone is unlocked and in use, the alert is lost completely (verified on Android 16).**
    - When the phone is unlocked, `AlarmReceiver.kt:97` calls `startActivity` from the background.
    - Android blocked the launch (`Background activity launch blocked … BAL_BLOCK`) without throwing an exception. The `catch` fallback never ran, so there was no screen, no notification and no sound.
    - With "Display over other apps" granted, the same launch was allowed (`BAL_ALLOW_SAW_PERMISSION`) and the alarm took over the screen.
    - Fix part 1: always post the full-screen-intent notification with sound. Locked, it opens full screen; unlocked, it shows as a heads-up.
    - Fix part 2: additionally call `startActivity` when `Settings.canDrawOverlays()` is true, so the alarm takes over the screen even while the phone is in use.
    - Fix part 3: request the overlay permission during onboarding (`Settings.ACTION_MANAGE_OVERLAY_PERMISSION`). *(Done with P0 permissions.)*
+   - *Done:*
+     - The receiver always posts the notification, and opens the alarm screen directly whenever "Display over other apps" is allowed.
+     - Also found and fixed: the alarm screen called `requestDismissKeyguard()`, which on a PIN-locked phone asks for the PIN when the alarm appears. It now shows over the lock screen without unlocking it.
+     - Verified on Android 16, real alarms, every state:
+
+       | State | Result |
+       |---|---|
+       | Locked | Alarm screen + sound |
+       | PIN-locked | Alarm screen over the lock screen + sound |
+       | In use, overlay allowed | Alarm screen takes over + sound |
+       | In use, no overlay | Heads-up with Taken/Snooze, still ringing after 30 s (before: nothing at all) |
+       | Taken / Snooze from the notification | Sound stops; snooze registered at +5 min |
+       | Notifications off, overlay allowed | Alarm screen rings by itself |
+       | Full-screen intents revoked, locked | Lock-screen notification with sound; with overlay, the alarm screen |
+       | Reminder | Its own channel, sound doesn't repeat |
 10. [ ] **Two doses due at the same time.**
     - `AlarmActivity` is `singleInstance` (`AndroidManifest.xml:41`) but doesn't override `onNewIntent`.
     - So if a second alarm arrives while the first is on screen, it still shows the first medication's name, and the second `ongoing` notification is never cancelled.
     - This is common, because a 0 h 0 m interval is allowed.
-11. [ ] **ANR risk in the receiver.** `AlarmReceiver.kt:41-42` and `:101` read DataStore with `runBlocking` on the main thread. Use `goAsync()`, as the boot and reset branches already do.
+11. [x] **ANR risk in the receiver.** `AlarmReceiver.kt:41-42` and `:101` read DataStore with `runBlocking` on the main thread. Use `goAsync()`, as the boot and reset branches already do.
+    - *Done (with P1-9):* every branch of `AlarmReceiver` now reads DataStore inside `goAsync()` on `Dispatchers.IO`; `runBlocking` is gone.
 12. [ ] **The receiver is exported.** `AlarmReceiver` has `exported="true"` (`AndroidManifest.xml:48`), so any installed app can trigger a fake alarm or the daily reset.
     - Fix: set `exported="false"`. `BOOT_COMPLETED` comes from the system, so it is still delivered.
     - Also check `intent.action` explicitly.
@@ -177,7 +197,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - `backup_rules.xml` and `data_extraction_rules.xml` are untouched templates, so everything gets backed up. That includes the device-specific ringtone URI and a stale first-dose time.
   - Alarms are not rescheduled after a restore.
   - Decide explicitly: either exclude those two keys or turn backup off. Make the Data safety answers match.
-- [ ] **Separate notification channels** for "upcoming reminder" and "time to take it", so users can adjust each one independently.
+- [x] **Separate notification channels** for "upcoming reminder" and "time to take it", so users can adjust each one independently.
+  - *Done (with P1-8):* "Dose alarms" and "Upcoming dose reminders" channels, both localized.
 
 ---
 

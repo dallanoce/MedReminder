@@ -1,9 +1,9 @@
 package io.github.dallanoce.medreminder.alarm
 
-import android.app.KeyguardManager
-import android.app.NotificationManager
+import android.content.BroadcastReceiver
 import android.content.Context
-import android.graphics.Color
+import android.content.Intent
+import android.content.IntentFilter
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -22,6 +22,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import io.github.dallanoce.medreminder.R
 import io.github.dallanoce.medreminder.data.local.datastore.DataStoreManager
@@ -34,35 +35,57 @@ class AlarmActivity : ComponentActivity() {
     private var vibrator: Vibrator? = null
     private lateinit var alarmScheduler: AlarmScheduler
     private lateinit var dataStoreManager: DataStoreManager
+    private var medId = -1
+
+    // Closes this screen when the alarm is handled from the notification's buttons.
+    private val closeReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            if (intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1) == medId) {
+                stopAlarm()
+                finish()
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
+
         alarmScheduler = AlarmScheduler(this)
         dataStoreManager = DataStoreManager(this)
-        
-        setupWindow()
-        
-        val medName = intent.getStringExtra("MED_NAME") ?: "Medication"
-        val medId = intent.getIntExtra("MED_ID", -1)
-        val isReminder = intent.getBooleanExtra("IS_REMINDER", false)
-        val reminderOffset = intent.getIntExtra("REMINDER_OFFSET", 15)
 
-        lifecycleScope.launch {
-            val savedRingtoneUri = dataStoreManager.ringtoneUri.first()
-            startAlarm(savedRingtoneUri)
+        setupWindow()
+
+        val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: "Medication"
+        medId = intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1)
+        val isReminder = intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false)
+        val reminderOffset = intent.getIntExtra(AlarmNotifications.EXTRA_REMINDER_OFFSET, 15)
+
+        ContextCompat.registerReceiver(
+            this,
+            closeReceiver,
+            IntentFilter(AlarmActionReceiver.ACTION_CLOSE_ALARM_SCREEN),
+            ContextCompat.RECEIVER_NOT_EXPORTED
+        )
+
+        // The notification normally plays the alarm sound. Only if it can't (the user turned off the
+        // app's notifications or the channel's sound) does this screen ring by itself.
+        if (!AlarmNotifications.isSounding(this, medId, isReminder)) {
+            lifecycleScope.launch {
+                val savedRingtoneUri = dataStoreManager.ringtoneUri.first()
+                startAlarm(savedRingtoneUri)
+            }
         }
 
         setContent {
             val userName by dataStoreManager.userName.collectAsState(initial = null)
-            
+
             MedReminderTheme {
                 val backgroundColor = if (isReminder) {
                     ComposeColor(0xFFE8F5E9) // Light Green
                 } else {
                     MaterialTheme.colorScheme.errorContainer
                 }
-                
+
                 val contentColor = if (isReminder) {
                     ComposeColor(0xFF2E7D32) // Dark Green
                 } else {
@@ -86,7 +109,7 @@ class AlarmActivity : ComponentActivity() {
                             color = contentColor
                         )
                         Spacer(modifier = Modifier.height(24.dp))
-                        
+
                         val message = if (isReminder) {
                             stringResource(R.string.reminder_message, reminderOffset, medName)
                         } else {
@@ -96,7 +119,7 @@ class AlarmActivity : ComponentActivity() {
                                 stringResource(R.string.alarm_message_default, medName)
                             }
                         }
-                        
+
                         Text(
                             text = message,
                             fontSize = 28.sp,
@@ -106,13 +129,13 @@ class AlarmActivity : ComponentActivity() {
                         )
 
                         Spacer(modifier = Modifier.height(48.dp))
-                        
+
                         if (isReminder) {
                             Button(
-                                onClick = { 
+                                onClick = {
                                     stopAlarm()
-                                    dismissNotification(medId + AlarmScheduler.REMINDER_ID_OFFSET)
-                                    finish() 
+                                    AlarmNotifications.cancel(this@AlarmActivity, medId, isReminder = true)
+                                    finish()
                                 },
                                 modifier = Modifier.fillMaxWidth(0.8f),
                                 colors = ButtonDefaults.buttonColors(containerColor = ComposeColor(0xFF2E7D32))
@@ -121,10 +144,10 @@ class AlarmActivity : ComponentActivity() {
                             }
                         } else {
                             Button(
-                                onClick = { 
+                                onClick = {
                                     stopAlarm()
-                                    dismissNotification(medId)
-                                    finish() 
+                                    AlarmNotifications.cancel(this@AlarmActivity, medId, isReminder = false)
+                                    finish()
                                 },
                                 modifier = Modifier.fillMaxWidth(0.8f)
                             ) {
@@ -132,9 +155,9 @@ class AlarmActivity : ComponentActivity() {
                             }
                             Spacer(modifier = Modifier.height(16.dp))
                             OutlinedButton(
-                                onClick = { 
+                                onClick = {
                                     snoozeAlarm(medName, medId)
-                                    finish() 
+                                    finish()
                                 },
                                 modifier = Modifier.fillMaxWidth(0.8f)
                             ) {
@@ -147,18 +170,17 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
+    // Shows over the lock screen without unlocking it: asking to dismiss the keyguard would put the
+    // PIN prompt on top of the alarm.
     private fun setupWindow() {
+        window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
             setShowWhenLocked(true)
             setTurnScreenOn(true)
-            val keyguardManager = getSystemService(Context.KEYGUARD_SERVICE) as KeyguardManager
-            keyguardManager.requestDismissKeyguard(this, null)
         } else {
             @Suppress("DEPRECATION")
             window.addFlags(
                 WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-                WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD or
-                WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
                 WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
             )
         }
@@ -211,19 +233,15 @@ class AlarmActivity : ComponentActivity() {
         vibrator?.cancel()
     }
 
-    private fun dismissNotification(id: Int) {
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        notificationManager.cancel(id)
-    }
-
     private fun snoozeAlarm(medName: String, medId: Int) {
         stopAlarm()
-        dismissNotification(medId)
+        AlarmNotifications.cancel(this, medId, isReminder = false)
         alarmScheduler.snoozeAlarm(medId, medName)
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        unregisterReceiver(closeReceiver)
         stopAlarm()
     }
 }

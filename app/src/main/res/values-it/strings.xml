@@ -75,6 +75,12 @@
     <string name="reminder_offset_hint">Minuti prima della dose (0–%1$d). 0 = nessun promemoria.</string>
     <string name="save_btn">Salva</string>
 
+    <!-- Notification channels -->
+    <string name="channel_dose_alarms">Allarmi delle dosi</string>
+    <string name="channel_dose_alarms_desc">Suona all\'ora di ogni dose finché non la confermi.</string>
+    <string name="channel_reminders">Promemoria delle dosi in arrivo</string>
+    <string name="channel_reminders_desc">Ti avvisa qualche minuto prima di ogni dose.</string>
+
     <!-- Alarm Activity -->
     <string name="alarm_title">È ora della tua medicina!</string>
     <string name="reminder_title">Promemoria Medicina in Arrivo</string>
