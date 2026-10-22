@@ -37,6 +37,28 @@ fun HomeScreen(
     val firstDoseTime by viewModel.firstDoseTime.collectAsState()
     val userName by viewModel.userName.collectAsState()
     val context = LocalContext.current
+    var showResetDialog by remember { mutableStateOf(false) }
+
+    if (showResetDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetDialog = false },
+            title = { Text(stringResource(R.string.reset_confirm_title)) },
+            text = { Text(stringResource(R.string.reset_confirm_text)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.clearDay()
+                    showResetDialog = false
+                }) {
+                    Text(stringResource(R.string.reset_confirm_btn))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetDialog = false }) {
+                    Text(stringResource(R.string.cancel_btn))
+                }
+            }
+        )
+    }
 
     Scaffold(
         topBar = {
@@ -150,7 +172,7 @@ fun HomeScreen(
                                         modifier = Modifier.weight(1f)
                                     )
                                     TextButton(
-                                        onClick = { viewModel.clearDay() },
+                                        onClick = { showResetDialog = true },
                                         modifier = Modifier.padding(start = 8.dp)
                                     ) {
                                         Text(stringResource(R.string.home_reset))

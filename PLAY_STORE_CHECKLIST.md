@@ -230,7 +230,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - Known cosmetic issue: when the alarm screen takes over while the phone is in use, the system heads-up (with the same Taken/Snooze buttons) covers its title.
 - [x] **Settings → About:** add the privacy policy link, the medical disclaimer and the app version.
   - *Done:* Settings has "Privacy policy" (opens `https://dallanoce.github.io/MedReminder/privacy-policy.html`) and "About" (version + medical disclaimer), EN + IT. Verified on Android 16. The link only works once GitHub Pages is enabled (P0).
-- [ ] **Confirmation before RESET** (already in `app/TODO.md`).
+- [x] **Confirmation before RESET** (already in `app/TODO.md`).
+  - *Done:* the dialog explains that today's remaining alarms are cancelled (EN + IT). Verified on Android 16: Cancel keeps the schedule and its alarms; confirming clears both.
 - [ ] **Backup.**
   - `backup_rules.xml` and `data_extraction_rules.xml` are untouched templates, so everything gets backed up. That includes the device-specific ringtone URI and a stale first-dose time.
   - Alarms are not rescheduled after a restore.

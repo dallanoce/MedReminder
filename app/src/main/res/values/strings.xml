@@ -33,6 +33,9 @@
     <string name="home_set_first_dose">SET FIRST DOSE TIME</string>
     <string name="home_first_dose_at">First dose at: %1$s</string>
     <string name="home_reset">RESET</string>
+    <string name="reset_confirm_title">Reset today\'s schedule?</string>
+    <string name="reset_confirm_text">The remaining dose alarms of today will be cancelled. You can then set the first dose time again.</string>
+    <string name="reset_confirm_btn">Reset</string>
     <string name="home_schedule_title">Schedule</string>
     <string name="home_scheduled_at">Scheduled at: %1$s</string>
     <string name="home_waiting_first_dose">Waiting for first dose time</string>
