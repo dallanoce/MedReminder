@@ -232,10 +232,14 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - *Done:* Settings has "Privacy policy" (opens `https://dallanoce.github.io/MedReminder/privacy-policy.html`) and "About" (version + medical disclaimer), EN + IT. Verified on Android 16. The link only works once GitHub Pages is enabled (P0).
 - [x] **Confirmation before RESET** (already in `app/TODO.md`).
   - *Done:* the dialog explains that today's remaining alarms are cancelled (EN + IT). Verified on Android 16: Cancel keeps the schedule and its alarms; confirming clears both.
-- [ ] **Backup.**
+- [x] **Backup.**
   - `backup_rules.xml` and `data_extraction_rules.xml` are untouched templates, so everything gets backed up. That includes the device-specific ringtone URI and a stale first-dose time.
   - Alarms are not rescheduled after a restore.
   - Decide explicitly: either exclude those two keys or turn backup off. Make the Data safety answers match.
+  - *Decision and implementation:*
+    - The plan (health data) is excluded from cloud backups, which keeps the Data safety answer at "no data collected", and it moves with a direct phone-to-phone transfer (Android 12+, `data_extraction_rules.xml`). Android 11 and below back up nothing (`backup_rules.xml`), since one rule set covers both cloud and transfer there.
+    - A stale ringtone or first dose after a transfer is handled by the P1-7 fallback and the P1-15 reset on app start.
+    - Verified on Android 16 with the local backup transport: after device transfer the plan is restored; a cloud backup stores nothing (the transport rejects the empty backup).
 - [x] **Separate notification channels** for "upcoming reminder" and "time to take it", so users can adjust each one independently.
   - *Done (with P1-8):* "Dose alarms" and "Upcoming dose reminders" channels, both localized.
 
