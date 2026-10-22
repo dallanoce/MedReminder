@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
@@ -49,115 +50,132 @@ fun HomeScreen(
                             tint = MaterialTheme.colorScheme.primary
                         )
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(stringResource(R.string.home_title))
+                        Text(
+                            stringResource(R.string.home_title),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     }
                 }
             )
         }
     ) { padding ->
-        Column(
+        // Same calculation the alarms are scheduled from
+        val doses = remember(firstDoseTime, medications) {
+            firstDoseTime?.let { DoseSchedule.doses(it, medications) }
+        }
+        // A single scrolling list, so everything stays reachable with large system fonts.
+        LazyColumn(
             modifier = Modifier
                 .padding(padding)
-                .fillMaxSize()
-                .padding(16.dp)
+                .fillMaxSize(),
+            contentPadding = PaddingValues(16.dp)
         ) {
             if (missingPermissions.isNotEmpty()) {
-                PermissionWarning(onFixPermissions)
-                Spacer(modifier = Modifier.height(16.dp))
+                item {
+                    PermissionWarning(onFixPermissions)
+                    Spacer(modifier = Modifier.height(16.dp))
+                }
             }
 
-            val greeting = if (!userName.isNullOrEmpty()) {
-                stringResource(R.string.home_greeting, userName!!)
-            } else {
-                stringResource(R.string.home_greeting_default)
+            item {
+                val greeting = if (!userName.isNullOrEmpty()) {
+                    stringResource(R.string.home_greeting, userName!!)
+                } else {
+                    stringResource(R.string.home_greeting_default)
+                }
+                Text(
+                    text = greeting,
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(bottom = 16.dp)
+                )
             }
-            Text(
-                text = greeting,
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
 
             if (medications.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.home_empty_state))
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillParentMaxWidth()
+                            .fillParentMaxHeight(0.6f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(stringResource(R.string.home_empty_state))
+                    }
                 }
             } else {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Text(
-                            text = stringResource(R.string.home_today_plan),
-                            style = MaterialTheme.typography.headlineSmall
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        if (firstDoseTime == null) {
-                            Button(
-                                onClick = {
-                                    val calendar = Calendar.getInstance()
-                                    TimePickerDialog(
-                                        context,
-                                        { _, hour, minute ->
-                                            val selectedCalendar = Calendar.getInstance().apply {
-                                                set(Calendar.HOUR_OF_DAY, hour)
-                                                set(Calendar.MINUTE, minute)
-                                                set(Calendar.SECOND, 0)
-                                                set(Calendar.MILLISECOND, 0)
-                                            }
-                                            viewModel.setFirstDoseTime(selectedCalendar.timeInMillis)
-                                        },
-                                        calendar.get(Calendar.HOUR_OF_DAY),
-                                        calendar.get(Calendar.MINUTE),
-                                        DateFormat.is24HourFormat(context)
-                                    ).show()
-                                },
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Text(stringResource(R.string.home_set_first_dose))
-                            }
-                        } else {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = stringResource(R.string.home_first_dose_at, formatTimeWithDay(firstDoseTime!!)),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier.weight(1f)
-                                )
-                                TextButton(
-                                    onClick = { viewModel.clearDay() },
-                                    modifier = Modifier.padding(start = 8.dp)
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text(
+                                text = stringResource(R.string.home_today_plan),
+                                style = MaterialTheme.typography.headlineSmall
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            if (firstDoseTime == null) {
+                                Button(
+                                    onClick = {
+                                        val calendar = Calendar.getInstance()
+                                        TimePickerDialog(
+                                            context,
+                                            { _, hour, minute ->
+                                                val selectedCalendar = Calendar.getInstance().apply {
+                                                    set(Calendar.HOUR_OF_DAY, hour)
+                                                    set(Calendar.MINUTE, minute)
+                                                    set(Calendar.SECOND, 0)
+                                                    set(Calendar.MILLISECOND, 0)
+                                                }
+                                                viewModel.setFirstDoseTime(selectedCalendar.timeInMillis)
+                                            },
+                                            calendar.get(Calendar.HOUR_OF_DAY),
+                                            calendar.get(Calendar.MINUTE),
+                                            DateFormat.is24HourFormat(context)
+                                        ).show()
+                                    },
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    Text(stringResource(R.string.home_reset))
+                                    Text(stringResource(R.string.home_set_first_dose))
+                                }
+                            } else {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = stringResource(R.string.home_first_dose_at, formatTimeWithDay(firstDoseTime!!)),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier.weight(1f)
+                                    )
+                                    TextButton(
+                                        onClick = { viewModel.clearDay() },
+                                        modifier = Modifier.padding(start = 8.dp)
+                                    ) {
+                                        Text(stringResource(R.string.home_reset))
+                                    }
                                 }
                             }
                         }
                     }
                 }
 
-                Spacer(modifier = Modifier.height(24.dp))
-
-                Text(text = stringResource(R.string.home_schedule_title), style = MaterialTheme.typography.titleMedium)
-                Spacer(modifier = Modifier.height(8.dp))
-
-                // Same calculation the alarms are scheduled from
-                val doses = remember(firstDoseTime, medications) {
-                    firstDoseTime?.let { DoseSchedule.doses(it, medications) }
+                item {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(text = stringResource(R.string.home_schedule_title), style = MaterialTheme.typography.titleMedium)
+                    Spacer(modifier = Modifier.height(8.dp))
                 }
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    itemsIndexed(medications) { index, med ->
-                        val scheduledTime = doses?.getOrNull(index)?.time
-                        ScheduleItem(med, scheduledTime, isFirst = index == 0)
-                        if (index < medications.lastIndex) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(vertical = 4.dp),
-                                thickness = 0.5.dp,
-                                color = MaterialTheme.colorScheme.outlineVariant
-                            )
-                        }
+
+                itemsIndexed(medications, key = { _, med -> med.id }) { index, med ->
+                    val scheduledTime = doses?.getOrNull(index)?.time
+                    ScheduleItem(med, scheduledTime, isFirst = index == 0)
+                    if (index < medications.lastIndex) {
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            thickness = 0.5.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant
+                        )
                     }
                 }
             }

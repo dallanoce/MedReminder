@@ -223,7 +223,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - *Done (with language switching):* `Theme.AppCompat.DayNight.NoActionBar`. Verified on Android 16 in night mode: the launch splash is dark, with no white flash.
 - [x] **Time format.** 24-hour time is forced in two places: the time picker (`HomeScreen.kt:97`) and the `"HH:mm"` formatter (`HomeScreen.kt:183`). Respect `DateFormat.is24HourFormat(context)` and the locale's time format.
   - *Done:* the picker and Home follow the system 12/24-hour setting and locale (`DateFormat.getTimeFormat`). Verified on Android 16: 12-hour mode shows AM/PM in the picker and "5:35 PM … 1:35 AM (domani)" on Home; 24-hour mode shows "17:35 … 01:35 (domani)".
-- [ ] **Accessibility.** The font scale is capped at 1.3 (`Theme.kt:57`), and many users of a medication app need large text. Remove the cap and make the screens scroll instead.
+- [x] **Accessibility.** The font scale is capped at 1.3 (`Theme.kt:57`), and many users of a medication app need large text. Remove the cap and make the screens scroll instead.
+  - *Done (reverses the cap added in commit `6d74e80`; revert this one commit if you prefer the cap):*
+    - The system font size is honoured up to 200%. Home is now a single scrolling list; the alarm screen and the add-medication dialog scroll when needed; top-bar titles and navigation labels ellipsize instead of breaking words.
+    - Verified on Android 16 at 200% on every screen, including a long medication name on the alarm screen.
+    - Known cosmetic issue: when the alarm screen takes over while the phone is in use, the system heads-up (with the same Taken/Snooze buttons) covers its title.
 - [ ] **Settings → About:** add the privacy policy link, the medical disclaimer and the app version.
 - [ ] **Confirmation before RESET** (already in `app/TODO.md`).
 - [ ] **Backup.**

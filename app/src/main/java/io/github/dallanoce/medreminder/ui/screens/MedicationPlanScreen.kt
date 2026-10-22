@@ -1,6 +1,8 @@
 package io.github.dallanoce.medreminder.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
@@ -14,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
@@ -29,7 +32,7 @@ fun MedicationPlanScreen(viewModel: MedViewModel = viewModel()) {
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text(stringResource(R.string.plan_title)) })
+            TopAppBar(title = { Text(stringResource(R.string.plan_title), maxLines = 1, overflow = TextOverflow.Ellipsis) })
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }) {
@@ -110,7 +113,7 @@ fun AddMedicationDialog(isFirst: Boolean, onDismiss: () -> Unit, onConfirm: (Str
         onDismissRequest = onDismiss,
         title = { Text(stringResource(if (isFirst) R.string.add_first_med_title else R.string.add_med_title)) },
         text = {
-            Column {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 TextField(
                     value = name,
                     onValueChange = { name = it },

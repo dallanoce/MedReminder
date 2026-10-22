@@ -9,10 +9,7 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Density
 
 private val DarkColorScheme = darkColorScheme(
     primary = Purple80,
@@ -53,18 +50,11 @@ fun MedReminderTheme(
         else -> LightColorScheme
     }
 
-    val currentDensity = LocalDensity.current
-    val maxFontScale = 1.3f
-    val customDensity = Density(
-        density = currentDensity.density,
-        fontScale = currentDensity.fontScale.coerceAtMost(maxFontScale)
+    // The system font size is honoured in full (up to 200%): many users of a medication reminder
+    // rely on large text. Screens scroll instead of capping it.
+    MaterialTheme(
+        colorScheme = colorScheme,
+        typography = Typography,
+        content = content
     )
-
-    CompositionLocalProvider(LocalDensity provides customDensity) {
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = Typography,
-            content = content
-        )
-    }
 }
