@@ -1,6 +1,8 @@
 package io.github.dallanoce.medreminder.ui.screens
 
 import android.app.TimePickerDialog
+import android.content.Context
+import android.text.format.DateFormat
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -21,7 +23,6 @@ import io.github.dallanoce.medreminder.data.local.room.Medication
 import io.github.dallanoce.medreminder.permissions.AlertPermission
 import io.github.dallanoce.medreminder.ui.MedViewModel
 import io.github.dallanoce.medreminder.ui.dayOffset
-import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -108,7 +109,7 @@ fun HomeScreen(
                                         },
                                         calendar.get(Calendar.HOUR_OF_DAY),
                                         calendar.get(Calendar.MINUTE),
-                                        true
+                                        DateFormat.is24HourFormat(context)
                                     ).show()
                                 },
                                 modifier = Modifier.fillMaxWidth()
@@ -215,17 +216,16 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?, isFirst: Boolean)
 /** The time, marked "(tomorrow)" / "(yesterday)" when the schedule crosses midnight. */
 @Composable
 private fun formatTimeWithDay(timestamp: Long): String {
-    val time = formatTime(timestamp)
+    val context = LocalContext.current
+    val time = formatTime(context, timestamp)
     return when (dayOffset(timestamp, System.currentTimeMillis())) {
         0 -> time
         1 -> stringResource(R.string.time_tomorrow, time)
         -1 -> stringResource(R.string.time_yesterday, time)
-        else -> java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
-            .format(Date(timestamp))
+        else -> DateFormat.getDateFormat(context).format(Date(timestamp)) + " " + time
     }
 }
 
-fun formatTime(timestamp: Long): String {
-    val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
-    return sdf.format(Date(timestamp))
-}
+/** The time in the user's 12/24-hour setting and locale. */
+fun formatTime(context: Context, timestamp: Long): String =
+    DateFormat.getTimeFormat(context).format(Date(timestamp))
