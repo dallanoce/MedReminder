@@ -57,6 +57,9 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - **Other forms:** content rating questionnaire, target audience (adults, not children), ads = none.
   - **Store listing (EN + IT):** title, short and full description, 512×512 icon, 1024×500 feature graphic, at least 2 phone screenshots. Category: Medical.
   - **Disclaimer in the description:** state that the app is not a medical device and that users should consult a healthcare professional.
+  - [x] *Prepared:* `docs/privacy-policy.md` (EN + IT, ready for GitHub Pages), `docs/play-store/listing.md` (name, short and full description in EN + IT, within Play's length limits) and `docs/play-store/console-answers.md` (suggested answers for every App content form).
+  - [ ] **You:** replace `CONTACT_EMAIL` in the policy, publish it (GitHub Pages: *Settings → Pages → main / docs*), then fill in the forms and the store listing in Play Console.
+  - [ ] **You:** create the graphics: 512×512 icon, 1024×500 feature graphic, phone screenshots.
 - [ ] **Closed testing requirement.** Personal developer accounts created after 13 Nov 2023 must run a closed test with ≥ 12 testers opted in for 14 consecutive days before production access can be requested. This has the longest lead time on the list, so start it as soon as a build can be uploaded.
 
 ---
