@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.google.devtools.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 // Release signing is read from keystore.properties (git-ignored, see docs/RELEASE.md).
@@ -69,6 +70,12 @@ android {
     }
 }
 
+// Exported database schemas: committed to git, so every schema change ships with a tested migration
+// (users' medication plans must never be lost on an update). Also available to androidTest.
+room {
+    schemaDirectory("$projectDir/schemas")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_11
@@ -97,6 +104,9 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
+    // Navigation brings kotlinx.serialization 1.7; Room's schema tooling (room-testing) needs 1.8+, and
+    // test APKs must use the app's versions.
+    implementation(platform(libs.kotlinx.serialization.bom))
 
     // Coroutines
     implementation(libs.kotlinx.coroutines.android)
@@ -104,6 +114,7 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.androidx.room.testing)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)

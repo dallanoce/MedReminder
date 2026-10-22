@@ -5,7 +5,9 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [Medication::class], version = 1, exportSchema = false)
+// Bump the version for any schema change and add a migration (or @AutoMigration) plus a test in
+// MigrationTest: a destructive migration would wipe users' medication plans.
+@Database(entities = [Medication::class], version = 1, exportSchema = true)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun medicationDao(): MedicationDao
 

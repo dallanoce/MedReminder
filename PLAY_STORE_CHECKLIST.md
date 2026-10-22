@@ -259,7 +259,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - Fixed the one new Compose lint error (a string read through `LocalContext` during composition).
     - Re-ran the full suite: 25 unit tests, 4 instrumented tests, every emulator scenario, and the minified release build.
     - [ ] **Later:** Compose 1.12, core 1.19, lifecycle 2.11 and navigation 2.10 need `compileSdk = 37`. Install "Android SDK Platform 37" in the SDK Manager first; targetSdk can stay 36.
-- [ ] **Room schema.** Set `exportSchema = true` (`AppDatabase.kt:8`) and commit the schema directory to git. Every later schema change can then ship with a tested migration. Never use destructive migration, because the database holds users' medication plans.
+- [x] **Room schema.** Set `exportSchema = true` (`AppDatabase.kt:8`) and commit the schema directory to git. Every later schema change can then ship with a tested migration. Never use destructive migration, because the database holds users' medication plans.
+  - *Done:*
+    - Room Gradle plugin with `schemaDirectory("app/schemas")`. The version-1 schema is committed, and `AppDatabase` documents the migration rule.
+    - New `MigrationTest` (Room `MigrationTestHelper`) checks the exported schema; future migration tests go there.
+    - kotlinx.serialization is aligned to 1.8.1, since room-testing needs it and test APKs share the app's versions. 5/5 instrumented tests pass.
 - [ ] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.
 - [ ] **Tests.**
   - Replace the template tests. The instrumented test asserts the `com.example` package name, so it will fail after the rename.
