@@ -40,8 +40,8 @@
     <string name="time_tomorrow">%1$s (tomorrow)</string>
     <string name="time_yesterday">%1$s (yesterday)</string>
     <string name="home_first_med_day">First medication of the day</string>
-    <string name="home_greeting">Ciao %1$s</string>
-    <string name="home_greeting_default">Ciao User</string>
+    <string name="home_greeting">Hello %1$s</string>
+    <string name="home_greeting_default">Hello</string>
 
     <!-- Medication Plan Screen -->
     <string name="plan_title">Therapeutic Plan</string>
@@ -73,6 +73,8 @@
     <string name="select_lang_title">Select Language</string>
     <string name="user_name_setting_label">User Name</string>
     <string name="user_name_hint">Enter your name</string>
+    <string name="user_name_not_set">Not set</string>
+    <string name="reminder_off">Off</string>
     <string name="reminder_offset_label">Reminder Offset (minutes)</string>
     <string name="reminder_offset_hint">Minutes before the dose (0–%1$d). 0 = no reminder.</string>
     <string name="save_btn">Save</string>
@@ -95,5 +97,9 @@
     <plurals name="alarm_more_waiting">
         <item quantity="one">%d more medication waiting</item>
         <item quantity="other">%d more medications waiting</item>
+    </plurals>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%d minute before</item>
+        <item quantity="other">%d minutes before</item>
     </plurals>
 </resources>

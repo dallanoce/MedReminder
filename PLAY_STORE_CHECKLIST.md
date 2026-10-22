@@ -194,7 +194,7 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - *Done:* `drawable/ic_notification.xml` (the glyph, 24 dp). Verified in the status bar and the heads-up.
 - [x] **Home top-bar icon.** Tinting the full-colour image (`HomeScreen.kt:36-39`) paints it as a solid coloured square. Use the monochrome glyph instead.
   - *Done:* uses `ic_notification`, tinted with the theme colour.
-- [ ] **Localization.**
+- [x] **Localization.**
   - The English strings say "Ciao" (`values/strings.xml:26-27`), and the Italian default greeting is "Ciao User".
   - `SettingsScreen.kt:74` strips "Ciao " off the greeting with `removePrefix`.
   - Hard-coded text to move into string resources:
@@ -203,6 +203,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - the channel name "Medication Alarms" (`AlarmReceiver.kt:152`)
     - the fallback name "Medication" (`AlarmActivity.kt:46`, `AlarmReceiver.kt:36`)
   - The language dialog has no "System default" option, even though the `lang_system` string exists.
+  - *Done:*
+    - The English greeting is "Hello"/"Hello %s" (Italian "Ciao"), and the user-name row shows "Not set" instead of trimming "Ciao ".
+    - The offset is a localized plural ("15 minutes before", "Off" for 0); the channel names and "Minutes" were already fixed in P1.
+    - The language dialog offers "System default".
+    - Verified in Italian on Android 16. Switching to English uncovered the language-switching bug below.
 - [ ] **Language switching on Android 8–12.**
   - Below API 33, `AppCompatDelegate.setApplicationLocales` (`SettingsScreen.kt:245`) only takes effect in an `AppCompatActivity` that uses an AppCompat theme. To persist the choice it also needs `AppLocalesMetadataHolderService` (with `autoStoreLocales`) declared in the manifest.
   - `MainActivity` is a plain `ComponentActivity` and the theme is platform Material, so none of this is in place.

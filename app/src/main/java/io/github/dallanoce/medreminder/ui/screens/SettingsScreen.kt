@@ -22,6 +22,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -72,7 +73,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.user_name_setting_label)) },
                     supportingContent = {
-                        Text(userName ?: stringResource(R.string.home_greeting_default).removePrefix("Ciao ").trim())
+                        Text(userName?.takeIf { it.isNotBlank() } ?: stringResource(R.string.user_name_not_set))
                     },
                     leadingContent = {
                         Icon(Icons.Default.Person, contentDescription = null)
@@ -86,7 +87,10 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                 ListItem(
                     headlineContent = { Text(stringResource(R.string.reminder_offset_label)) },
                     supportingContent = {
-                        Text("$reminderOffset min")
+                        Text(
+                            if (reminderOffset == 0) stringResource(R.string.reminder_off)
+                            else pluralStringResource(R.plurals.reminder_minutes_before, reminderOffset, reminderOffset)
+                        )
                     },
                     leadingContent = {
                         Icon(Icons.Default.Timer, contentDescription = null)
@@ -222,6 +226,11 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
             title = { Text(stringResource(R.string.select_lang_title)) },
             text = {
                 Column {
+                    LanguageOption(stringResource(R.string.lang_system), "") {
+                        viewModel.setLanguage("")
+                        setAppLanguage("")
+                        showLanguageDialog = false
+                    }
                     LanguageOption(stringResource(R.string.lang_en), "en") {
                         viewModel.setLanguage("en")
                         setAppLanguage("en")
@@ -256,6 +265,7 @@ fun LanguageOption(label: String, code: String, onClick: () -> Unit) {
     }
 }
 
+/** An empty [languageCode] goes back to the system language. */
 private fun setAppLanguage(languageCode: String) {
     val appLocale: LocaleListCompat = LocaleListCompat.forLanguageTags(languageCode)
     AppCompatDelegate.setApplicationLocales(appLocale)

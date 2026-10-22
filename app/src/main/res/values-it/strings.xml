@@ -41,7 +41,7 @@
     <string name="time_yesterday">%1$s (ieri)</string>
     <string name="home_first_med_day">Prima medicina del giorno</string>
     <string name="home_greeting">Ciao %1$s</string>
-    <string name="home_greeting_default">Ciao User</string>
+    <string name="home_greeting_default">Ciao</string>
 
     <!-- Medication Plan Screen -->
     <string name="plan_title">Piano Terapeutico</string>
@@ -73,6 +73,8 @@
     <string name="select_lang_title">Seleziona Lingua</string>
     <string name="user_name_setting_label">Nome Utente</string>
     <string name="user_name_hint">Inserisci il tuo nome</string>
+    <string name="user_name_not_set">Non impostato</string>
+    <string name="reminder_off">Disattivato</string>
     <string name="reminder_offset_label">Anticipo Promemoria (minuti)</string>
     <string name="reminder_offset_hint">Minuti prima della dose (0–%1$d). 0 = nessun promemoria.</string>
     <string name="save_btn">Salva</string>
@@ -96,5 +98,10 @@
         <item quantity="one">%d altra medicina in attesa</item>
         <item quantity="many">%d altre medicine in attesa</item>
         <item quantity="other">%d altre medicine in attesa</item>
+    </plurals>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%d minuto prima</item>
+        <item quantity="many">%d minuti prima</item>
+        <item quantity="other">%d minuti prima</item>
     </plurals>
 </resources>
