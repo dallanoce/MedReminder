@@ -6,11 +6,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.medreminder"
+    namespace = "io.github.dallanoce.medreminder"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.medreminder"
+        applicationId = "io.github.dallanoce.medreminder"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

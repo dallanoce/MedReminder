@@ -12,11 +12,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
 
 ## P0 — Blockers
 
-- [ ] **Change the application ID.** Play rejects `com.example.medreminder` (`app/build.gradle.kts:13`) because `com.example` is a restricted prefix. Pick a permanent ID (e.g. `it.<yourname>.medreminder`), since it can never change after the first upload. Rename these to match:
+- [x] **Change the application ID.** Play rejects `com.example.medreminder` (`app/build.gradle.kts:13`) because `com.example` is a restricted prefix. Pick a permanent ID (e.g. `it.<yourname>.medreminder`), since it can never change after the first upload. Rename these to match:
   - `namespace`
   - the source package folders
   - the `ACTION_DAILY_RESET` string (`AlarmScheduler.kt:17`)
   - the package assertion in `ExampleInstrumentedTest.kt`
+  - *Done:* the app ID, namespace and Kotlin packages are now `io.github.dallanoce.medreminder`.
 - [ ] **Target API 36.** Since 31 Aug 2026, new apps and updates must target Android 16 (API 36). Set `compileSdk = 36` and `targetSdk = 36` (`app/build.gradle.kts:10,15`).
   - AGP 8.7.3 was only built for API ≤ 35, so upgrade AGP together with Kotlin and KSP. Lint reports 9.4.1 as the latest. AGP 9 is a major release (built-in Kotlin), so the latest 8.x is the smaller step.
   - The API 36 SDK platform is already installed.
