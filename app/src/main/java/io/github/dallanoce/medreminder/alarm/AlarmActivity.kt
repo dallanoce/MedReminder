@@ -12,6 +12,7 @@ import android.os.*
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
+import androidx.core.net.toUri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -264,7 +265,7 @@ class AlarmActivity : AppCompatActivity() {
      */
     private fun playFirstAvailableSound(savedRingtoneUri: String?): Ringtone? {
         val candidates = listOfNotNull(
-            savedRingtoneUri?.let { Uri.parse(it) },
+            savedRingtoneUri?.toUri(),
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM),
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
         )

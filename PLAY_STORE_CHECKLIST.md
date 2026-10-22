@@ -281,10 +281,13 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - `docs/TESTING.md` describes how to run them, plus the manual alarm matrix with adb commands.
     - The whole matrix passed on the Android 16 emulator during this branch: locked, PIN, in use with and without overlay, notifications off, full screen revoked, two doses at once, reboot, permission revoke/re-grant, Doze, 200% text, 12 h clock, both languages, minified release.
     - [ ] **You:** run the matrix in `docs/TESTING.md` on Android 8, 12 and 14 (no emulator images for them were installed) and on at least one physical phone.
-- [ ] **Lint cleanup:**
+- [x] **Lint cleanup:**
   - delete 11 unused resources: the template colours, `ic_account_box`, `ic_favorite`, `ic_home`, `ic_launcher_background`
   - replace the deprecated `Icons.Default.Assignment` with its `Icons.AutoMirrored` version
   - remove the redundant activity label
+  - *Done:*
+    - Removed the unused template colours and drawables, replaced `Uri.parse` with `toUri`, moved `Assignment` to its AutoMirrored version and removed the redundant label. The manifest attributes that are intentionally newer than minSdk are marked with `tools:targetApi`.
+    - Release lint: **0 errors, 8 warnings** (it was 56). All 8 are about API 37 / newer library versions, i.e. the compileSdk 37 follow-up above.
 - [ ] **16 KB page size.** The current dependencies include no native libraries, so the app should already comply. Recheck the final AAB in APK Analyzer after upgrading dependencies.
 - [ ] **Repo hygiene.** Remove or git-ignore `progress.txt`, `app/TODO.md` and the tracked `.idea/` files.
 

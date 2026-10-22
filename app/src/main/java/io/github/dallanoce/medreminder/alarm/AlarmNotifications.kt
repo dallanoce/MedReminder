@@ -10,6 +10,7 @@ import android.media.AudioAttributes
 import android.media.RingtoneManager
 import android.net.Uri
 import androidx.core.app.NotificationCompat
+import androidx.core.net.toUri
 import androidx.core.app.NotificationManagerCompat
 import io.github.dallanoce.medreminder.R
 
@@ -193,7 +194,7 @@ object AlarmNotifications {
     /** The chosen ringtone if it can still be read, else the default alarm sound, else the default notification sound. */
     private fun resolveAlarmSound(context: Context, ringtoneUri: String?): Uri =
         listOfNotNull(
-            ringtoneUri?.let { Uri.parse(it) },
+            ringtoneUri?.toUri(),
             RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
         ).firstOrNull { canOpen(context, it) } ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
 

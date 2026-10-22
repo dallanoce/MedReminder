@@ -7,7 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Assignment
+import androidx.compose.material.icons.automirrored.filled.Assignment
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -116,6 +116,6 @@ enum class AppDestinations(
     val route: String
 ) {
     HOME(R.string.home_label, Icons.Default.Home, "home"),
-    MEDICATION_PLAN(R.string.med_plan_label, Icons.Default.Assignment, "medication_plan"),
+    MEDICATION_PLAN(R.string.med_plan_label, Icons.AutoMirrored.Filled.Assignment, "medication_plan"),
     SETTINGS(R.string.settings_label, Icons.Default.Settings, "settings"),
 }

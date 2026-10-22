@@ -10,6 +10,7 @@ import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.net.toUri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -115,7 +116,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                     headlineContent = { Text(stringResource(R.string.ringtone_setting_label)) },
                     supportingContent = {
                         val name = ringtoneUri?.let {
-                            RingtoneManager.getRingtone(context, Uri.parse(it))?.getTitle(context)
+                            RingtoneManager.getRingtone(context, it.toUri())?.getTitle(context)
                         } ?: stringResource(R.string.default_ringtone)
                         Text(name)
                     },
@@ -126,7 +127,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                         val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                             putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
                             putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, ringtonePickerTitle)
-                            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, ringtoneUri?.let { Uri.parse(it) })
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, ringtoneUri?.let { it.toUri() })
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
                         }
@@ -161,7 +162,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                     },
                     modifier = Modifier.clickable {
                         try {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+                            context.startActivity(Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri()))
                         } catch (e: ActivityNotFoundException) {
                             // No browser installed: nothing to open the page with.
                         }
