@@ -166,7 +166,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - Fix: return a result so the UI can react.
     - Also reschedule all alarms on `AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED`.
     - *Done (with P0 permissions):* `scheduleAlarm` returns `false` instead of opening Settings, and the setup screen and Home banner surface the missing permission. The receiver reschedules everything on the permission broadcast.
-14. [ ] **Consider `setAlarmClock()` for doses.** It is the API meant for user-visible alarms (it also needs the exact-alarm permission). Doze doesn't throttle it the way it throttles `setExactAndAllowWhileIdle`, and the system shows the next alarm in the status bar.
+14. [x] **Consider `setAlarmClock()` for doses.** It is the API meant for user-visible alarms (it also needs the exact-alarm permission). Doze doesn't throttle it the way it throttles `setExactAndAllowWhileIdle`, and the system shows the next alarm in the status bar.
+    - *Done:*
+      - Dose alarms and snoozes use `setAlarmClock()`; tapping the "next alarm" opens the app. Early reminders stay on `setExactAndAllowWhileIdle()`, so a reminder isn't shown as the next alarm.
+      - Verified on Android 16: the dose alarm is registered as an alarm clock (`flags=0x3`) and shown as the next alarm, and Android refuses to enter deep Doze before it.
+      - With only a reminder pending, the device entered deep Doze (IDLE) and the reminder still fired on time.
 15. [ ] **Decide how the 03:00 reset should behave.** It cancels every dose scheduled after 3 AM, so a plan started in the evening loses its night doses (`AlarmReceiver.kt:59-82`).
 
 ---

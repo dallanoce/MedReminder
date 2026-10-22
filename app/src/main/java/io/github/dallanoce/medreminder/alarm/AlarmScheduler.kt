@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import io.github.dallanoce.medreminder.MainActivity
 import io.github.dallanoce.medreminder.data.local.datastore.DataStoreManager
 import io.github.dallanoce.medreminder.data.local.room.AppDatabase
 import kotlinx.coroutines.flow.first
@@ -59,11 +60,24 @@ class AlarmScheduler(private val context: Context) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            timeInMillis,
-            pendingIntent
-        )
+        if (isReminder) {
+            alarmManager.setExactAndAllowWhileIdle(
+                AlarmManager.RTC_WAKEUP,
+                timeInMillis,
+                pendingIntent
+            )
+        } else {
+            // Dose alarms (and snoozes) use the alarm-clock API: the system leaves Doze in time for
+            // them, they aren't rate-limited like other while-idle alarms, and the next dose shows as
+            // the next alarm in the status bar. Tapping it opens the app.
+            val showApp = PendingIntent.getActivity(
+                context,
+                0,
+                Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.setAlarmClock(AlarmManager.AlarmClockInfo(timeInMillis, showApp), pendingIntent)
+        }
         return true
     }
 
