@@ -288,7 +288,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - *Done:*
     - Removed the unused template colours and drawables, replaced `Uri.parse` with `toUri`, moved `Assignment` to its AutoMirrored version and removed the redundant label. The manifest attributes that are intentionally newer than minSdk are marked with `tools:targetApi`.
     - Release lint: **0 errors, 8 warnings** (it was 56). All 8 are about API 37 / newer library versions, i.e. the compileSdk 37 follow-up above.
-- [ ] **16 KB page size.** The current dependencies include no native libraries, so the app should already comply. Recheck the final AAB in APK Analyzer after upgrading dependencies.
+- [x] **16 KB page size.** The current dependencies include no native libraries, so the app should already comply. Recheck the final AAB in APK Analyzer after upgrading dependencies.
+  - *Done:* after the upgrades the app does ship native code: `libandroidx.graphics.path.so` (Compose) and `libdatastore_shared_counter.so` (DataStore 1.3), for 4 ABIs. All 8 have every loadable segment aligned to 16 KB (`0x4000`); `zipalign -c -P 16` passes and they are stored uncompressed. Recheck after future dependency upgrades (APK Analyzer flags it).
 - [ ] **Repo hygiene.** Remove or git-ignore `progress.txt`, `app/TODO.md` and the tracked `.idea/` files.
 
 ---
