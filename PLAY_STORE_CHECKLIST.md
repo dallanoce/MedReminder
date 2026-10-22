@@ -253,7 +253,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - This matters here because `material-icons-extended` is very large unless shrunk.
   - Smoke-test the minified release build on a real device.
   - *Done:* minify + resource shrinking, with line numbers kept (the AAB carries the mapping). The release APK went from 12.8 MB to 2.0 MB. Verified the signed, minified release on the Android 16 emulator: setup screen, plan, a real alarm on the locked screen with sound, snooze and the language switch work, with no crashes. Not yet tried on a physical device.
-- [ ] **Upgrade dependencies** along with AGP. Lint reports 28 outdated-dependency warnings (Compose BOM 2024.11, Room 2.6.1, …). Also migrate `kotlinOptions` to `kotlin { compilerOptions { … } }`.
+- [x] **Upgrade dependencies** along with AGP. Lint reports 28 outdated-dependency warnings (Compose BOM 2024.11, Room 2.6.1, …). Also migrate `kotlinOptions` to `kotlin { compilerOptions { … } }`.
+  - *Done (`kotlinOptions` was migrated in P0):*
+    - Upgraded to the newest versions that compile against API 36: Compose BOM 2026.06.01 (Compose 1.11), core-ktx 1.18.0, lifecycle 2.10.0, navigation 2.9.8, activity-compose 1.13.0, appcompat 1.8.0, DataStore 1.3.0, coroutines 1.11.0, androidx.test junit 1.3.0 / espresso 3.7.0.
+    - Fixed the one new Compose lint error (a string read through `LocalContext` during composition).
+    - Re-ran the full suite: 25 unit tests, 4 instrumented tests, every emulator scenario, and the minified release build.
+    - [ ] **Later:** Compose 1.12, core 1.19, lifecycle 2.11 and navigation 2.10 need `compileSdk = 37`. Install "Android SDK Platform 37" in the SDK Manager first; targetSdk can stay 36.
 - [ ] **Room schema.** Set `exportSchema = true` (`AppDatabase.kt:8`) and commit the schema directory to git. Every later schema change can then ship with a tested migration. Never use destructive migration, because the database holds users' medication plans.
 - [ ] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.
 - [ ] **Tests.**

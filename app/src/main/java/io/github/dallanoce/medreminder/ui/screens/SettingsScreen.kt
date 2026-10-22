@@ -54,6 +54,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
     var showOffsetDialog by remember { mutableStateOf(false) }
     var showAboutDialog by remember { mutableStateOf(false) }
 
+    val ringtonePickerTitle = stringResource(R.string.select_ringtone_title)
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -124,7 +125,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                     modifier = Modifier.clickable {
                         val intent = Intent(RingtoneManager.ACTION_RINGTONE_PICKER).apply {
                             putExtra(RingtoneManager.EXTRA_RINGTONE_TYPE, RingtoneManager.TYPE_ALARM)
-                            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, context.getString(R.string.select_ringtone_title))
+                            putExtra(RingtoneManager.EXTRA_RINGTONE_TITLE, ringtonePickerTitle)
                             putExtra(RingtoneManager.EXTRA_RINGTONE_EXISTING_URI, ringtoneUri?.let { Uri.parse(it) })
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_DEFAULT, true)
                             putExtra(RingtoneManager.EXTRA_RINGTONE_SHOW_SILENT, false)
