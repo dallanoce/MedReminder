@@ -266,7 +266,7 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - kotlinx.serialization is aligned to 1.8.1, since room-testing needs it and test APKs share the app's versions. 5/5 instrumented tests pass.
 - [x] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.
   - *Done:* `versionCode` goes up by 1 per upload, and `versionName` follows MAJOR.MINOR.PATCH, starting at 1.0.0. Both are documented in `app/build.gradle.kts` and `docs/RELEASE.md`.
-- [ ] **Tests.**
+- [x] **Tests.**
   - Replace the template tests. The instrumented test asserts the `com.example` package name, so it will fail after the rename.
   - Add unit tests for the schedule function from P1-5.
   - Test manually on Android 8, 12, 14 and 16, in each of these states:
@@ -276,6 +276,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - in Doze (`adb shell dumpsys deviceidle force-idle`)
     - after a reboot
     - with each permission denied in turn
+  - *Done:*
+    - Template tests removed. There are now 24 unit tests (`DoseScheduleTest`, `DailyResetTest`, `InputValidationTest`, `DayOffsetTest`) and 4 instrumented tests (`MedicationDaoTest`, `MigrationTest`).
+    - `docs/TESTING.md` describes how to run them, plus the manual alarm matrix with adb commands.
+    - The whole matrix passed on the Android 16 emulator during this branch: locked, PIN, in use with and without overlay, notifications off, full screen revoked, two doses at once, reboot, permission revoke/re-grant, Doze, 200% text, 12 h clock, both languages, minified release.
+    - [ ] **You:** run the matrix in `docs/TESTING.md` on Android 8, 12 and 14 (no emulator images for them were installed) and on at least one physical phone.
 - [ ] **Lint cleanup:**
   - delete 11 unused resources: the template colours, `ic_account_box`, `ic_favorite`, `ic_home`, `ic_launcher_background`
   - replace the deprecated `Icons.Default.Assignment` with its `Icons.AutoMirrored` version
