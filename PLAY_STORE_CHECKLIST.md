@@ -148,10 +148,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
        | Notifications off, overlay allowed | Alarm screen rings by itself |
        | Full-screen intents revoked, locked | Lock-screen notification with sound; with overlay, the alarm screen |
        | Reminder | Its own channel, sound doesn't repeat |
-10. [ ] **Two doses due at the same time.**
+10. [x] **Two doses due at the same time.**
     - `AlarmActivity` is `singleInstance` (`AndroidManifest.xml:41`) but doesn't override `onNewIntent`.
     - So if a second alarm arrives while the first is on screen, it still shows the first medication's name, and the second `ongoing` notification is never cancelled.
     - This is common, because a 0 h 0 m interval is allowed.
+    - *Done:* the alarm screen keeps a queue. `onNewIntent` adds new alarms; it shows the newest one with "N more medications waiting" (plural, EN + IT), and each one is confirmed, snoozed or handled from its own notification. Verified on Android 16, unlocked and locked: two doses due together are handled one after the other, and both notifications and the sound end with the last one.
 11. [x] **ANR risk in the receiver.** `AlarmReceiver.kt:41-42` and `:101` read DataStore with `runBlocking` on the main thread. Use `goAsync()`, as the boot and reset branches already do.
     - *Done (with P1-9):* every branch of `AlarmReceiver` now reads DataStore inside `goAsync()` on `Dispatchers.IO`; `runBlocking` is gone.
 12. [ ] **The receiver is exported.** `AlarmReceiver` has `exported="true"` (`AndroidManifest.xml:48`), so any installed app can trigger a fake alarm or the daily reset.

@@ -30,6 +30,7 @@ class AlarmActionReceiver : BroadcastReceiver() {
             Intent(ACTION_CLOSE_ALARM_SCREEN)
                 .setPackage(context.packageName)
                 .putExtra(AlarmNotifications.EXTRA_MED_ID, medId)
+                .putExtra(AlarmNotifications.EXTRA_IS_REMINDER, isReminder)
         )
     }
 }

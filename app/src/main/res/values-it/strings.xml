@@ -90,4 +90,9 @@
     <string name="alarm_message">%1$s, è ora di prendere la tua medicina: %2$s</string>
     <string name="alarm_message_default">È ora di prendere la tua medicina: %1$s</string>
     <string name="reminder_message">Ricorda, c\'è una medicina in arrivo tra %1$d min: %2$s</string>
+    <plurals name="alarm_more_waiting">
+        <item quantity="one">%d altra medicina in attesa</item>
+        <item quantity="many">%d altre medicine in attesa</item>
+        <item quantity="other">%d altre medicine in attesa</item>
+    </plurals>
 </resources>

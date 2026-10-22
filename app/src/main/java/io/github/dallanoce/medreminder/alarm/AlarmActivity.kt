@@ -18,6 +18,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -31,19 +32,31 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AlarmActivity : ComponentActivity() {
+    /** One alarm waiting for the user on this screen. */
+    private data class PendingAlarm(
+        val medId: Int,
+        val medName: String,
+        val isReminder: Boolean,
+        val reminderOffset: Int
+    )
+
     private var ringtone: Ringtone? = null
     private var vibrator: Vibrator? = null
+    private var ringingHere = false
     private lateinit var alarmScheduler: AlarmScheduler
     private lateinit var dataStoreManager: DataStoreManager
-    private var medId = -1
 
-    // Closes this screen when the alarm is handled from the notification's buttons.
+    // Alarms can arrive while this screen is open (e.g. two medications due at the same time):
+    // they queue up and are handled one at a time, newest first.
+    private val pending = mutableStateListOf<PendingAlarm>()
+
+    // Takes an alarm off this screen when it's handled from the notification's buttons.
     private val closeReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
-            if (intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1) == medId) {
-                stopAlarm()
-                finish()
-            }
+            remove(
+                intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1),
+                intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false)
+            )
         }
     }
 
@@ -55,11 +68,6 @@ class AlarmActivity : ComponentActivity() {
 
         setupWindow()
 
-        val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: "Medication"
-        medId = intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1)
-        val isReminder = intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false)
-        val reminderOffset = intent.getIntExtra(AlarmNotifications.EXTRA_REMINDER_OFFSET, 15)
-
         ContextCompat.registerReceiver(
             this,
             closeReceiver,
@@ -67,103 +75,147 @@ class AlarmActivity : ComponentActivity() {
             ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
-        // The notification normally plays the alarm sound. Only if it can't (the user turned off the
-        // app's notifications or the channel's sound) does this screen ring by itself.
-        if (!AlarmNotifications.isSounding(this, medId, isReminder)) {
-            lifecycleScope.launch {
-                val savedRingtoneUri = dataStoreManager.ringtoneUri.first()
-                startAlarm(savedRingtoneUri)
-            }
+        add(intent)
+        if (pending.isEmpty()) {
+            finish()
+            return
         }
 
         setContent {
             val userName by dataStoreManager.userName.collectAsState(initial = null)
-
             MedReminderTheme {
-                val backgroundColor = if (isReminder) {
-                    ComposeColor(0xFFE8F5E9) // Light Green
-                } else {
-                    MaterialTheme.colorScheme.errorContainer
+                pending.lastOrNull()?.let { alarm ->
+                    AlarmContent(alarm, waiting = pending.size - 1, userName = userName)
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        add(intent)
+    }
+
+    private fun add(intent: Intent) {
+        val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: return
+        val alarm = PendingAlarm(
+            medId = intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1),
+            medName = medName,
+            isReminder = intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false),
+            reminderOffset = intent.getIntExtra(AlarmNotifications.EXTRA_REMINDER_OFFSET, 15)
+        )
+        pending.removeAll { it.medId == alarm.medId && it.isReminder == alarm.isReminder }
+        pending.add(alarm)
+
+        // The notification normally plays the alarm sound. Only if it can't (the user turned off the
+        // app's notifications or the channel's sound) does this screen ring by itself.
+        if (!ringingHere && !AlarmNotifications.isSounding(this, alarm.medId, alarm.isReminder)) {
+            ringingHere = true
+            lifecycleScope.launch {
+                startAlarm(dataStoreManager.ringtoneUri.first())
+            }
+        }
+    }
+
+    /** Takes an alarm off the screen, and closes the screen when none is left. */
+    private fun remove(medId: Int, isReminder: Boolean) {
+        pending.removeAll { it.medId == medId && it.isReminder == isReminder }
+        if (pending.isEmpty()) {
+            stopAlarm()
+            finish()
+        }
+    }
+
+    private fun onTaken(alarm: PendingAlarm) {
+        AlarmNotifications.cancel(this, alarm.medId, alarm.isReminder)
+        remove(alarm.medId, alarm.isReminder)
+    }
+
+    private fun onSnooze(alarm: PendingAlarm) {
+        AlarmNotifications.cancel(this, alarm.medId, isReminder = false)
+        alarmScheduler.snoozeAlarm(alarm.medId, alarm.medName)
+        remove(alarm.medId, isReminder = false)
+    }
+
+    @Composable
+    private fun AlarmContent(alarm: PendingAlarm, waiting: Int, userName: String?) {
+        val backgroundColor = if (alarm.isReminder) {
+            ComposeColor(0xFFE8F5E9) // Light Green
+        } else {
+            MaterialTheme.colorScheme.errorContainer
+        }
+
+        val contentColor = if (alarm.isReminder) {
+            ComposeColor(0xFF2E7D32) // Dark Green
+        } else {
+            MaterialTheme.colorScheme.onErrorContainer
+        }
+
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            color = backgroundColor
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
+            ) {
+                Text(
+                    text = if (alarm.isReminder) stringResource(R.string.reminder_title) else stringResource(R.string.alarm_title),
+                    fontSize = 20.sp,
+                    color = contentColor
+                )
+                Spacer(modifier = Modifier.height(24.dp))
+
+                val message = when {
+                    alarm.isReminder -> stringResource(R.string.reminder_message, alarm.reminderOffset, alarm.medName)
+                    !userName.isNullOrEmpty() -> stringResource(R.string.alarm_message, userName, alarm.medName)
+                    else -> stringResource(R.string.alarm_message_default, alarm.medName)
                 }
 
-                val contentColor = if (isReminder) {
-                    ComposeColor(0xFF2E7D32) // Dark Green
-                } else {
-                    MaterialTheme.colorScheme.onErrorContainer
+                Text(
+                    text = message,
+                    fontSize = 28.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 36.sp,
+                    color = contentColor
+                )
+
+                if (waiting > 0) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = pluralStringResource(R.plurals.alarm_more_waiting, waiting, waiting),
+                        fontSize = 18.sp,
+                        color = contentColor
+                    )
                 }
 
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = backgroundColor
-                ) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
+                Spacer(modifier = Modifier.height(48.dp))
+
+                if (alarm.isReminder) {
+                    Button(
+                        onClick = { onTaken(alarm) },
+                        modifier = Modifier.fillMaxWidth(0.8f),
+                        colors = ButtonDefaults.buttonColors(containerColor = ComposeColor(0xFF2E7D32))
                     ) {
-                        Text(
-                            text = if (isReminder) stringResource(R.string.reminder_title) else stringResource(R.string.alarm_title),
-                            fontSize = 20.sp,
-                            color = contentColor
-                        )
-                        Spacer(modifier = Modifier.height(24.dp))
-
-                        val message = if (isReminder) {
-                            stringResource(R.string.reminder_message, reminderOffset, medName)
-                        } else {
-                            if (!userName.isNullOrEmpty()) {
-                                stringResource(R.string.alarm_message, userName!!, medName)
-                            } else {
-                                stringResource(R.string.alarm_message_default, medName)
-                            }
-                        }
-
-                        Text(
-                            text = message,
-                            fontSize = 28.sp,
-                            textAlign = TextAlign.Center,
-                            lineHeight = 36.sp,
-                            color = contentColor
-                        )
-
-                        Spacer(modifier = Modifier.height(48.dp))
-
-                        if (isReminder) {
-                            Button(
-                                onClick = {
-                                    stopAlarm()
-                                    AlarmNotifications.cancel(this@AlarmActivity, medId, isReminder = true)
-                                    finish()
-                                },
-                                modifier = Modifier.fillMaxWidth(0.8f),
-                                colors = ButtonDefaults.buttonColors(containerColor = ComposeColor(0xFF2E7D32))
-                            ) {
-                                Text(stringResource(R.string.alarm_ok_btn), fontSize = 24.sp)
-                            }
-                        } else {
-                            Button(
-                                onClick = {
-                                    stopAlarm()
-                                    AlarmNotifications.cancel(this@AlarmActivity, medId, isReminder = false)
-                                    finish()
-                                },
-                                modifier = Modifier.fillMaxWidth(0.8f)
-                            ) {
-                                Text(stringResource(R.string.alarm_taken_btn), fontSize = 24.sp)
-                            }
-                            Spacer(modifier = Modifier.height(16.dp))
-                            OutlinedButton(
-                                onClick = {
-                                    snoozeAlarm(medName, medId)
-                                    finish()
-                                },
-                                modifier = Modifier.fillMaxWidth(0.8f)
-                            ) {
-                                Text(stringResource(R.string.alarm_snooze_btn), fontSize = 18.sp)
-                            }
-                        }
+                        Text(stringResource(R.string.alarm_ok_btn), fontSize = 24.sp)
+                    }
+                } else {
+                    Button(
+                        onClick = { onTaken(alarm) },
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    ) {
+                        Text(stringResource(R.string.alarm_taken_btn), fontSize = 24.sp)
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedButton(
+                        onClick = { onSnooze(alarm) },
+                        modifier = Modifier.fillMaxWidth(0.8f)
+                    ) {
+                        Text(stringResource(R.string.alarm_snooze_btn), fontSize = 18.sp)
                     }
                 }
             }
@@ -231,12 +283,7 @@ class AlarmActivity : ComponentActivity() {
     private fun stopAlarm() {
         ringtone?.stop()
         vibrator?.cancel()
-    }
-
-    private fun snoozeAlarm(medName: String, medId: Int) {
-        stopAlarm()
-        AlarmNotifications.cancel(this, medId, isReminder = false)
-        alarmScheduler.snoozeAlarm(medId, medName)
+        ringingHere = false
     }
 
     override fun onDestroy() {
