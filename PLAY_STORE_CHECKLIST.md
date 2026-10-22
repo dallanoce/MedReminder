@@ -171,7 +171,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
       - Dose alarms and snoozes use `setAlarmClock()`; tapping the "next alarm" opens the app. Early reminders stay on `setExactAndAllowWhileIdle()`, so a reminder isn't shown as the next alarm.
       - Verified on Android 16: the dose alarm is registered as an alarm clock (`flags=0x3`) and shown as the next alarm, and Android refuses to enter deep Doze before it.
       - With only a reminder pending, the device entered deep Doze (IDLE) and the reminder still fired on time.
-15. [ ] **Decide how the 03:00 reset should behave.** It cancels every dose scheduled after 3 AM, so a plan started in the evening loses its night doses (`AlarmReceiver.kt:59-82`).
+15. [x] **Decide how the 03:00 reset should behave.** It cancels every dose scheduled after 3 AM, so a plan started in the evening loses its night doses (`AlarmReceiver.kt:59-82`).
+    - *Decision and implementation:*
+      - A day's schedule is cleared at the first 03:00 after it started, unless doses remain; then right after its last dose (`alarm/DailyReset.kt`, 7 tests including daylight saving).
+      - The reset time is recomputed on every change: plan edits, first dose, reboot, permission grant. When the app opens it clears a schedule that ended while the phone was off. This replaces the late-reset guard from P1-1.
+      - Home marks doses after midnight with "(tomorrow)" / "(yesterday)" (`dayOffset`, 4 tests).
+      - Verified on Android 16: a daytime plan resets at 03:00; a dose 24 h later moves the reset to right after it; deleting that dose moves it back; yesterday's schedule is cleared on app start.
 
 ---
 

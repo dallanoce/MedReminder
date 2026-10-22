@@ -37,11 +37,9 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val alarmScheduler = AlarmScheduler(this)
-        // Schedule the daily 3 AM reset cycle
-        alarmScheduler.scheduleDailyReset()
-        // Restore today's alarms in case they were lost (e.g. "Alarms & reminders" was revoked)
-        lifecycleScope.launch { alarmScheduler.rescheduleAll() }
+        // Clear the day if it ended while the phone was off, and restore today's alarms in case they
+        // were lost (e.g. "Alarms & reminders" was revoked or the app was force-stopped).
+        lifecycleScope.launch { AlarmScheduler(this@MainActivity).runDailyReset() }
 
         enableEdgeToEdge()
         setContent {

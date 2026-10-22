@@ -20,6 +20,7 @@ import io.github.dallanoce.medreminder.alarm.DoseSchedule
 import io.github.dallanoce.medreminder.data.local.room.Medication
 import io.github.dallanoce.medreminder.permissions.AlertPermission
 import io.github.dallanoce.medreminder.ui.MedViewModel
+import io.github.dallanoce.medreminder.ui.dayOffset
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -121,7 +122,7 @@ fun HomeScreen(
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = stringResource(R.string.home_first_dose_at, formatTime(firstDoseTime!!)),
+                                    text = stringResource(R.string.home_first_dose_at, formatTimeWithDay(firstDoseTime!!)),
                                     style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier.weight(1f)
                                 )
@@ -196,7 +197,7 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?, isFirst: Boolean)
         headlineContent = { Text(medication.name) },
         supportingContent = {
             if (scheduledTime != null) {
-                Text(stringResource(R.string.home_scheduled_at, formatTime(scheduledTime)))
+                Text(stringResource(R.string.home_scheduled_at, formatTimeWithDay(scheduledTime)))
             } else {
                 Text(stringResource(R.string.home_waiting_first_dose))
             }
@@ -209,6 +210,19 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?, isFirst: Boolean)
             }
         }
     )
+}
+
+/** The time, marked "(tomorrow)" / "(yesterday)" when the schedule crosses midnight. */
+@Composable
+private fun formatTimeWithDay(timestamp: Long): String {
+    val time = formatTime(timestamp)
+    return when (dayOffset(timestamp, System.currentTimeMillis())) {
+        0 -> time
+        1 -> stringResource(R.string.time_tomorrow, time)
+        -1 -> stringResource(R.string.time_yesterday, time)
+        else -> java.text.DateFormat.getDateTimeInstance(java.text.DateFormat.SHORT, java.text.DateFormat.SHORT)
+            .format(Date(timestamp))
+    }
 }
 
 fun formatTime(timestamp: Long): String {

@@ -9,7 +9,6 @@ import io.github.dallanoce.medreminder.MainActivity
 import io.github.dallanoce.medreminder.data.local.datastore.DataStoreManager
 import io.github.dallanoce.medreminder.data.local.room.AppDatabase
 import kotlinx.coroutines.flow.first
-import java.util.Calendar
 
 class AlarmScheduler(private val context: Context) {
     private val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
@@ -20,17 +19,9 @@ class AlarmScheduler(private val context: Context) {
         const val DAILY_RESET_ID = 99999
         const val ACTION_DAILY_RESET = "io.github.dallanoce.medreminder.ACTION_DAILY_RESET"
         const val ACTION_DOSE_ALARM = "io.github.dallanoce.medreminder.ACTION_DOSE_ALARM"
-        const val EXTRA_RESET_TIME = "RESET_TIME"
 
         // Window for the daily reset when exact alarms are not allowed (no permission needed).
         private const val RESET_WINDOW_MILLIS = 15 * 60 * 1000L
-
-        /**
-         * The daily reset only clears a schedule that was started before the reset time,
-         * so a reset delivered late can't wipe a schedule the user already set for the new day.
-         */
-        fun shouldClearOnReset(firstDoseTime: Long?, resetTime: Long): Boolean =
-            firstDoseTime != null && firstDoseTime < resetTime
     }
 
     fun canScheduleExactAlarms(): Boolean =
@@ -81,25 +72,56 @@ class AlarmScheduler(private val context: Context) {
         return true
     }
 
-    fun scheduleDailyReset() {
-        val calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
-            set(Calendar.HOUR_OF_DAY, 3)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-
-            // If it's already past 3 AM today, schedule for tomorrow
-            if (timeInMillis <= System.currentTimeMillis()) {
-                add(Calendar.DAY_OF_YEAR, 1)
+    /**
+     * The daily reset: clears the day's schedule once it is over (see [DailyReset]), then re-registers
+     * everything. Runs when the reset alarm fires, after a reboot, when exact alarms are granted again
+     * and on app start, so a reset missed while the phone was off still happens.
+     */
+    suspend fun runDailyReset() {
+        val dataStoreManager = DataStoreManager(context)
+        val firstDoseTime = dataStoreManager.firstDoseTime.first()
+        if (firstDoseTime != null) {
+            val medications = AppDatabase.getDatabase(context).medicationDao().getMedicationsOnce()
+            val lastDoseTime = DoseSchedule.doses(firstDoseTime, medications).lastOrNull()?.time ?: firstDoseTime
+            if (System.currentTimeMillis() >= DailyReset.clearTime(firstDoseTime, lastDoseTime)) {
+                dataStoreManager.clearFirstDoseTime()
             }
         }
+        rescheduleAll()
+    }
 
-        val intent = Intent(context, AlarmReceiver::class.java).apply {
-            action = ACTION_DAILY_RESET
-            putExtra(EXTRA_RESET_TIME, calendar.timeInMillis)
+    /**
+     * Re-registers the remaining alarms of today's schedule from the saved plan, reading the current
+     * plan, first dose time and reminder offset, and moves the daily reset to when this schedule ends.
+     * Called whenever any of them changes. Snoozed alarms are left alone.
+     */
+    suspend fun rescheduleAll() {
+        val dataStoreManager = DataStoreManager(context)
+        val medications = AppDatabase.getDatabase(context).medicationDao().getMedicationsOnce()
+
+        // Start clean so a dose that moved or no longer exists can't keep a stale alarm.
+        medications.forEach { cancelDoseAlarms(it.id) }
+
+        val now = System.currentTimeMillis()
+        val firstDoseTime = dataStoreManager.firstDoseTime.first()
+        if (firstDoseTime == null) {
+            scheduleResetAt(DailyReset.nextBoundary(now))
+            return
         }
 
+        val doses = DoseSchedule.doses(firstDoseTime, medications)
+        scheduleResetAt(DailyReset.clearTime(firstDoseTime, doses.lastOrNull()?.time ?: firstDoseTime))
+
+        DoseSchedule.upcomingAlarms(
+            firstDoseTime = firstDoseTime,
+            medications = medications,
+            reminderOffsetMinutes = dataStoreManager.reminderOffset.first(),
+            now = now
+        ).forEach { scheduleAlarm(it.medId, it.medName, it.time, it.isReminder) }
+    }
+
+    private fun scheduleResetAt(timeInMillis: Long) {
+        val intent = Intent(context, AlarmReceiver::class.java).setAction(ACTION_DAILY_RESET)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             DAILY_RESET_ID,
@@ -108,42 +130,11 @@ class AlarmScheduler(private val context: Context) {
         )
 
         if (canScheduleExactAlarms()) {
-            alarmManager.setExactAndAllowWhileIdle(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                pendingIntent
-            )
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, timeInMillis, pendingIntent)
         } else {
             // Inexact window: needs no permission, so the app never crashes before it's granted.
-            alarmManager.setWindow(
-                AlarmManager.RTC_WAKEUP,
-                calendar.timeInMillis,
-                RESET_WINDOW_MILLIS,
-                pendingIntent
-            )
+            alarmManager.setWindow(AlarmManager.RTC_WAKEUP, timeInMillis, RESET_WINDOW_MILLIS, pendingIntent)
         }
-    }
-
-    /**
-     * Re-registers the remaining alarms of today's schedule from the saved plan, reading the current
-     * plan, first dose time and reminder offset. Called whenever any of them changes, after a reboot,
-     * when exact alarms are granted again (revoking them deletes every pending alarm) and on app start.
-     * Snoozed alarms are left alone.
-     */
-    suspend fun rescheduleAll() {
-        val dataStoreManager = DataStoreManager(context)
-        val medications = AppDatabase.getDatabase(context).medicationDao().getAllMedications().first()
-
-        // Start clean so a dose that moved or no longer exists can't keep a stale alarm.
-        medications.forEach { cancelDoseAlarms(it.id) }
-
-        val firstDoseTime = dataStoreManager.firstDoseTime.first() ?: return
-        DoseSchedule.upcomingAlarms(
-            firstDoseTime = firstDoseTime,
-            medications = medications,
-            reminderOffsetMinutes = dataStoreManager.reminderOffset.first(),
-            now = System.currentTimeMillis()
-        ).forEach { scheduleAlarm(it.medId, it.medName, it.time, it.isReminder) }
     }
 
     fun snoozeAlarm(medId: Int, medName: String) {

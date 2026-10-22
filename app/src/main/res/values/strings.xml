@@ -37,6 +37,8 @@
     <string name="home_scheduled_at">Scheduled at: %1$s</string>
     <string name="home_waiting_first_dose">Waiting for first dose time</string>
     <string name="home_interval_from_prev">+ %1$sh %2$sm from previous</string>
+    <string name="time_tomorrow">%1$s (tomorrow)</string>
+    <string name="time_yesterday">%1$s (yesterday)</string>
     <string name="home_first_med_day">First medication of the day</string>
     <string name="home_greeting">Ciao %1$s</string>
     <string name="home_greeting_default">Ciao User</string>

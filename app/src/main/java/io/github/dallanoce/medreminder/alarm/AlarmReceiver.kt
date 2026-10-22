@@ -6,7 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.provider.Settings
 import io.github.dallanoce.medreminder.data.local.datastore.DataStoreManager
-import io.github.dallanoce.medreminder.data.local.room.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -16,11 +15,11 @@ class AlarmReceiver : BroadcastReceiver() {
     // Not exported: only the system (boot, permission change) and this app's own alarms reach it.
     override fun onReceive(context: Context, intent: Intent) {
         when (intent.action) {
-            // Alarms don't survive a reboot, and revoking exact alarms deletes them: restore them.
+            // Alarms don't survive a reboot, and revoking exact alarms deletes them: restore them
+            // (clearing the day first if it ended meanwhile). The daily reset does the same.
             Intent.ACTION_BOOT_COMPLETED,
-            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -> rescheduleAlarms(context)
-
-            AlarmScheduler.ACTION_DAILY_RESET -> handleDailyReset(context, intent)
+            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED,
+            AlarmScheduler.ACTION_DAILY_RESET -> runDailyReset(context)
 
             AlarmScheduler.ACTION_DOSE_ALARM -> {
                 val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: return
@@ -59,40 +58,11 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun handleDailyReset(context: Context, intent: Intent) {
+    private fun runDailyReset(context: Context) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val dataStoreManager = DataStoreManager(context)
-                val database = AppDatabase.getDatabase(context)
-                val alarmScheduler = AlarmScheduler(context)
-                val resetTime = intent.getLongExtra(AlarmScheduler.EXTRA_RESET_TIME, System.currentTimeMillis())
-
-                if (AlarmScheduler.shouldClearOnReset(dataStoreManager.firstDoseTime.first(), resetTime)) {
-                    // Clear the first dose time
-                    dataStoreManager.clearFirstDoseTime()
-
-                    // Cancel all existing medication alarms
-                    database.medicationDao().getAllMedications().first().forEach { med ->
-                        alarmScheduler.cancelAlarm(med.id)
-                    }
-                }
-
-                // Schedule next daily reset
-                alarmScheduler.scheduleDailyReset()
-            } finally {
-                pendingResult.finish()
-            }
-        }
-    }
-
-    private fun rescheduleAlarms(context: Context) {
-        val pendingResult = goAsync()
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val alarmScheduler = AlarmScheduler(context)
-                alarmScheduler.rescheduleAll()
-                alarmScheduler.scheduleDailyReset()
+                AlarmScheduler(context).runDailyReset()
             } finally {
                 pendingResult.finish()
             }
