@@ -247,11 +247,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
 
 ## P3 — Build and maintenance
 
-- [ ] **Enable R8.**
+- [x] **Enable R8.**
   - Set `isMinifyEnabled = true` and `isShrinkResources = true` (`app/build.gradle.kts:24`).
   - Add `-keepattributes SourceFile,LineNumberTable` so stack traces in Play Console stay readable (the AAB carries the mapping file).
   - This matters here because `material-icons-extended` is very large unless shrunk.
   - Smoke-test the minified release build on a real device.
+  - *Done:* minify + resource shrinking, with line numbers kept (the AAB carries the mapping). The release APK went from 12.8 MB to 2.0 MB. Verified the signed, minified release on the Android 16 emulator: setup screen, plan, a real alarm on the locked screen with sound, snooze and the language switch work, with no crashes. Not yet tried on a physical device.
 - [ ] **Upgrade dependencies** along with AGP. Lint reports 28 outdated-dependency warnings (Compose BOM 2024.11, Room 2.6.1, …). Also migrate `kotlinOptions` to `kotlin { compilerOptions { … } }`.
 - [ ] **Room schema.** Set `exportSchema = true` (`AppDatabase.kt:8`) and commit the schema directory to git. Every later schema change can then ship with a tested migration. Never use destructive migration, because the database holds users' medication plans.
 - [ ] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.

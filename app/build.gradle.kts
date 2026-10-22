@@ -43,7 +43,10 @@ android {
             if (keystorePropertiesFile.exists()) {
                 signingConfig = signingConfigs.getByName("release")
             }
-            isMinifyEnabled = false
+            // R8: shrinks code and unused resources (material-icons-extended is large unshrunk).
+            // Room, DataStore and Compose ship their own keep rules.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
