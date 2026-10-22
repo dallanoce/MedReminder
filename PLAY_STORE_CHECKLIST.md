@@ -290,7 +290,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - Release lint: **0 errors, 8 warnings** (it was 56). All 8 are about API 37 / newer library versions, i.e. the compileSdk 37 follow-up above.
 - [x] **16 KB page size.** The current dependencies include no native libraries, so the app should already comply. Recheck the final AAB in APK Analyzer after upgrading dependencies.
   - *Done:* after the upgrades the app does ship native code: `libandroidx.graphics.path.so` (Compose) and `libdatastore_shared_counter.so` (DataStore 1.3), for 4 ABIs. All 8 have every loadable segment aligned to 16 KB (`0x4000`); `zipalign -c -P 16` passes and they are stored uncompressed. Recheck after future dependency upgrades (APK Analyzer flags it).
-- [ ] **Repo hygiene.** Remove or git-ignore `progress.txt`, `app/TODO.md` and the tracked `.idea/` files.
+- [x] **Repo hygiene.** Remove or git-ignore `progress.txt`, `app/TODO.md` and the tracked `.idea/` files.
+  - *Done:* `.idea/` and `progress.txt` are no longer tracked, and they and `app/TODO.md` are git-ignored. All files stay on disk; nothing was deleted. (The first `TODO.md` item, a confirmation before RESET, is now implemented.)
 
 ---
 
