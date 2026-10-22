@@ -228,7 +228,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - The system font size is honoured up to 200%. Home is now a single scrolling list; the alarm screen and the add-medication dialog scroll when needed; top-bar titles and navigation labels ellipsize instead of breaking words.
     - Verified on Android 16 at 200% on every screen, including a long medication name on the alarm screen.
     - Known cosmetic issue: when the alarm screen takes over while the phone is in use, the system heads-up (with the same Taken/Snooze buttons) covers its title.
-- [ ] **Settings → About:** add the privacy policy link, the medical disclaimer and the app version.
+- [x] **Settings → About:** add the privacy policy link, the medical disclaimer and the app version.
+  - *Done:* Settings has "Privacy policy" (opens `https://dallanoce.github.io/MedReminder/privacy-policy.html`) and "About" (version + medical disclaimer), EN + IT. Verified on Android 16. The link only works once GitHub Pages is enabled (P0).
 - [ ] **Confirmation before RESET** (already in `app/TODO.md`).
 - [ ] **Backup.**
   - `backup_rules.xml` and `data_extraction_rules.xml` are untouched templates, so everything gets backed up. That includes the device-specific ringtone URI and a stale first-dose time.

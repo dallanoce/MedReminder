@@ -78,6 +78,10 @@
     <string name="reminder_offset_label">Reminder Offset (minutes)</string>
     <string name="reminder_offset_hint">Minutes before the dose (0–%1$d). 0 = no reminder.</string>
     <string name="save_btn">Save</string>
+    <string name="privacy_policy_label">Privacy policy</string>
+    <string name="about_label">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="medical_disclaimer">MedReminder is a reminder tool. It is not a medical device and does not diagnose, treat, cure or prevent any medical condition. Always follow the instructions of your doctor or pharmacist, and consult a healthcare professional for medical advice.</string>
 
     <!-- Notification channels -->
     <string name="channel_dose_alarms">Dose alarms</string>

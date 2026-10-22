@@ -1,6 +1,8 @@
 package io.github.dallanoce.medreminder.ui.screens
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.media.RingtoneManager
 import android.net.Uri
@@ -11,9 +13,13 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Timer
@@ -46,6 +52,7 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
     var showLanguageDialog by remember { mutableStateOf(false) }
     var showNameDialog by remember { mutableStateOf(false) }
     var showOffsetDialog by remember { mutableStateOf(false) }
+    var showAboutDialog by remember { mutableStateOf(false) }
 
     val ringtonePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.StartActivityForResult()
@@ -145,6 +152,33 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
                     }
                 )
             }
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.privacy_policy_label)) },
+                    leadingContent = {
+                        Icon(Icons.Default.PrivacyTip, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(PRIVACY_POLICY_URL)))
+                        } catch (e: ActivityNotFoundException) {
+                            // No browser installed: nothing to open the page with.
+                        }
+                    }
+                )
+            }
+            item {
+                ListItem(
+                    headlineContent = { Text(stringResource(R.string.about_label)) },
+                    supportingContent = { Text(stringResource(R.string.about_version, appVersion(context))) },
+                    leadingContent = {
+                        Icon(Icons.Default.Info, contentDescription = null)
+                    },
+                    modifier = Modifier.clickable {
+                        showAboutDialog = true
+                    }
+                )
+            }
         }
     }
 
@@ -222,6 +256,25 @@ fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
         )
     }
 
+    if (showAboutDialog) {
+        AlertDialog(
+            onDismissRequest = { showAboutDialog = false },
+            title = { Text(stringResource(R.string.app_name)) },
+            text = {
+                Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                    Text(stringResource(R.string.about_version, appVersion(context)))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(stringResource(R.string.medical_disclaimer))
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showAboutDialog = false }) {
+                    Text(stringResource(R.string.alarm_ok_btn))
+                }
+            }
+        )
+    }
+
     if (showLanguageDialog) {
         AlertDialog(
             onDismissRequest = { showLanguageDialog = false },
@@ -266,6 +319,12 @@ fun LanguageOption(label: String, code: String, onClick: () -> Unit) {
         Text(label)
     }
 }
+
+/** Published from docs/privacy-policy.md (GitHub Pages). */
+private const val PRIVACY_POLICY_URL = "https://dallanoce.github.io/MedReminder/privacy-policy.html"
+
+private fun appVersion(context: Context): String =
+    context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "?"
 
 /** An empty [languageCode] goes back to the system language. */
 private fun setAppLanguage(languageCode: String) {

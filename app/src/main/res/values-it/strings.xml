@@ -78,6 +78,10 @@
     <string name="reminder_offset_label">Anticipo Promemoria (minuti)</string>
     <string name="reminder_offset_hint">Minuti prima della dose (0–%1$d). 0 = nessun promemoria.</string>
     <string name="save_btn">Salva</string>
+    <string name="privacy_policy_label">Informativa sulla privacy</string>
+    <string name="about_label">Informazioni</string>
+    <string name="about_version">Versione %1$s</string>
+    <string name="medical_disclaimer">Promemoria Medicine è uno strumento di promemoria. Non è un dispositivo medico e non diagnostica, cura, guarisce né previene alcuna condizione medica. Segui sempre le indicazioni del tuo medico o farmacista e rivolgiti a un professionista sanitario per consigli medici.</string>
 
     <!-- Notification channels -->
     <string name="channel_dose_alarms">Allarmi delle dosi</string>
