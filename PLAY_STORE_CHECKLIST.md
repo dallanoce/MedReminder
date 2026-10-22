@@ -155,9 +155,12 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - *Done:* the alarm screen keeps a queue. `onNewIntent` adds new alarms; it shows the newest one with "N more medications waiting" (plural, EN + IT), and each one is confirmed, snoozed or handled from its own notification. Verified on Android 16, unlocked and locked: two doses due together are handled one after the other, and both notifications and the sound end with the last one.
 11. [x] **ANR risk in the receiver.** `AlarmReceiver.kt:41-42` and `:101` read DataStore with `runBlocking` on the main thread. Use `goAsync()`, as the boot and reset branches already do.
     - *Done (with P1-9):* every branch of `AlarmReceiver` now reads DataStore inside `goAsync()` on `Dispatchers.IO`; `runBlocking` is gone.
-12. [ ] **The receiver is exported.** `AlarmReceiver` has `exported="true"` (`AndroidManifest.xml:48`), so any installed app can trigger a fake alarm or the daily reset.
+12. [x] **The receiver is exported.** `AlarmReceiver` has `exported="true"` (`AndroidManifest.xml:48`), so any installed app can trigger a fake alarm or the daily reset.
     - Fix: set `exported="false"`. `BOOT_COMPLETED` comes from the system, so it is still delivered.
     - Also check `intent.action` explicitly.
+    - *Done:*
+      - `AlarmReceiver` is `exported="false"`. Dose alarms carry an explicit `ACTION_DOSE_ALARM` (cancellation uses the same action so it still matches), and `onReceive` ignores unknown actions.
+      - Verified on Android 16: spoofed reset and dose broadcasts from adb had no effect. The permission broadcast, the app's own alarms, delete-cancellation and a real reboot (BOOT_COMPLETED restored the schedule and the 03:00 reset) all still work.
 13. [x] **`scheduleAlarm` opens Settings from any context** (`AlarmScheduler.kt:21-28`).
     - When it's called from the boot receiver, that launch is blocked and the alarm is silently dropped.
     - Fix: return a result so the UI can react.

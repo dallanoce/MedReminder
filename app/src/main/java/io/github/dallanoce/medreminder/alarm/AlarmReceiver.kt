@@ -13,24 +13,22 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class AlarmReceiver : BroadcastReceiver() {
+    // Not exported: only the system (boot, permission change) and this app's own alarms reach it.
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
-            intent.action == AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
-        ) {
+        when (intent.action) {
             // Alarms don't survive a reboot, and revoking exact alarms deletes them: restore them.
-            rescheduleAlarms(context)
-            return
-        }
+            Intent.ACTION_BOOT_COMPLETED,
+            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED -> rescheduleAlarms(context)
 
-        if (intent.action == AlarmScheduler.ACTION_DAILY_RESET) {
-            handleDailyReset(context, intent)
-            return
-        }
+            AlarmScheduler.ACTION_DAILY_RESET -> handleDailyReset(context, intent)
 
-        val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: return
-        val medId = intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1)
-        val isReminder = intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false)
-        deliverAlarm(context, medName, medId, isReminder)
+            AlarmScheduler.ACTION_DOSE_ALARM -> {
+                val medName = intent.getStringExtra(AlarmNotifications.EXTRA_MED_NAME) ?: return
+                val medId = intent.getIntExtra(AlarmNotifications.EXTRA_MED_ID, -1)
+                val isReminder = intent.getBooleanExtra(AlarmNotifications.EXTRA_IS_REMINDER, false)
+                deliverAlarm(context, medName, medId, isReminder)
+            }
+        }
     }
 
     private fun deliverAlarm(context: Context, medName: String, medId: Int, isReminder: Boolean) {

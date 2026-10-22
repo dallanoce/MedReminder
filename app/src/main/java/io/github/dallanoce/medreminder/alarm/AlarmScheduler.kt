@@ -18,6 +18,7 @@ class AlarmScheduler(private val context: Context) {
         const val SNOOZE_ID_OFFSET = 20000
         const val DAILY_RESET_ID = 99999
         const val ACTION_DAILY_RESET = "io.github.dallanoce.medreminder.ACTION_DAILY_RESET"
+        const val ACTION_DOSE_ALARM = "io.github.dallanoce.medreminder.ACTION_DOSE_ALARM"
         const val EXTRA_RESET_TIME = "RESET_TIME"
 
         // Window for the daily reset when exact alarms are not allowed (no permission needed).
@@ -45,9 +46,10 @@ class AlarmScheduler(private val context: Context) {
         if (!canScheduleExactAlarms()) return false
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
-            putExtra("MED_NAME", medName)
-            putExtra("MED_ID", medId)
-            putExtra("IS_REMINDER", isReminder)
+            action = ACTION_DOSE_ALARM
+            putExtra(AlarmNotifications.EXTRA_MED_NAME, medName)
+            putExtra(AlarmNotifications.EXTRA_MED_ID, medId)
+            putExtra(AlarmNotifications.EXTRA_IS_REMINDER, isReminder)
         }
 
         val pendingIntent = PendingIntent.getBroadcast(
@@ -148,7 +150,8 @@ class AlarmScheduler(private val context: Context) {
     }
 
     private fun cancelPendingIntent(requestCode: Int) {
-        val intent = Intent(context, AlarmReceiver::class.java)
+        // Must match the scheduled intent (same action) to find it.
+        val intent = Intent(context, AlarmReceiver::class.java).setAction(ACTION_DOSE_ALARM)
         val pendingIntent = PendingIntent.getBroadcast(
             context,
             requestCode,
