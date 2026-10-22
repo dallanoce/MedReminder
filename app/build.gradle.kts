@@ -22,8 +22,10 @@ android {
         applicationId = "io.github.dallanoce.medreminder"
         minSdk = 26
         targetSdk = 36
+        // Every upload to Play needs a higher versionCode: add 1 for each upload, even test builds.
+        // versionName is what users see: MAJOR.MINOR.PATCH (see docs/RELEASE.md).
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

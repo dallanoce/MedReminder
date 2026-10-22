@@ -264,7 +264,8 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - Room Gradle plugin with `schemaDirectory("app/schemas")`. The version-1 schema is committed, and `AppDatabase` documents the migration rule.
     - New `MigrationTest` (Room `MigrationTestHelper`) checks the exported schema; future migration tests go there.
     - kotlinx.serialization is aligned to 1.8.1, since room-testing needs it and test APKs share the app's versions. 5/5 instrumented tests pass.
-- [ ] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.
+- [x] **Versioning.** Increase `versionCode` on every upload and pick a `versionName` scheme.
+  - *Done:* `versionCode` goes up by 1 per upload, and `versionName` follows MAJOR.MINOR.PATCH, starting at 1.0.0. Both are documented in `app/build.gradle.kts` and `docs/RELEASE.md`.
 - [ ] **Tests.**
   - Replace the template tests. The instrumented test asserts the `com.example` package name, so it will fail after the rename.
   - Add unit tests for the schedule function from P1-5.

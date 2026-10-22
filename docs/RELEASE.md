@@ -17,8 +17,10 @@ is lost, it can be reset through Play Console support, but releases are blocked 
 
 ## Every release
 
-1. Increase `versionCode` (and update `versionName`) in `app/build.gradle.kts`.
-   Play rejects an upload whose `versionCode` was already used.
+1. In `app/build.gradle.kts`, add 1 to `versionCode` (Play rejects a `versionCode` that was already
+   uploaded, on any track) and update `versionName` (MAJOR.MINOR.PATCH):
+   - PATCH for fixes (1.0.0 → 1.0.1), MINOR for new features (1.0.1 → 1.1.0), MAJOR for big changes.
+   - Database schema changes need a version bump in `AppDatabase` and a migration test (see `MigrationTest`).
 2. Build the App Bundle:
 
    ```bash
