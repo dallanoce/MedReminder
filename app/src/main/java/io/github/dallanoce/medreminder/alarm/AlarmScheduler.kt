@@ -15,6 +15,7 @@ class AlarmScheduler(private val context: Context) {
 
     companion object {
         const val REMINDER_ID_OFFSET = 10000
+        const val SNOOZE_ID_OFFSET = 20000
         const val DAILY_RESET_ID = 99999
         const val ACTION_DAILY_RESET = "io.github.dallanoce.medreminder.ACTION_DAILY_RESET"
         const val EXTRA_RESET_TIME = "RESET_TIME"
@@ -37,7 +38,10 @@ class AlarmScheduler(private val context: Context) {
      * Schedules an exact alarm. Returns false, scheduling nothing, when the user hasn't allowed
      * exact alarms ("Alarms & reminders"); the permissions screen asks for it.
      */
-    fun scheduleAlarm(medId: Int, medName: String, timeInMillis: Long, isReminder: Boolean = false): Boolean {
+    fun scheduleAlarm(medId: Int, medName: String, timeInMillis: Long, isReminder: Boolean = false): Boolean =
+        scheduleExact(if (isReminder) medId + REMINDER_ID_OFFSET else medId, medId, medName, timeInMillis, isReminder)
+
+    private fun scheduleExact(requestCode: Int, medId: Int, medName: String, timeInMillis: Long, isReminder: Boolean): Boolean {
         if (!canScheduleExactAlarms()) return false
 
         val intent = Intent(context, AlarmReceiver::class.java).apply {
@@ -45,8 +49,6 @@ class AlarmScheduler(private val context: Context) {
             putExtra("MED_ID", medId)
             putExtra("IS_REMINDER", isReminder)
         }
-
-        val requestCode = if (isReminder) medId + REMINDER_ID_OFFSET else medId
 
         val pendingIntent = PendingIntent.getBroadcast(
             context,
@@ -107,40 +109,41 @@ class AlarmScheduler(private val context: Context) {
     }
 
     /**
-     * Re-registers the remaining alarms of today's schedule from the saved plan.
-     * Called after a reboot, when exact alarms are granted again (revoking them deletes every
-     * pending alarm) and on app start. Re-registering an alarm that already exists is harmless.
+     * Re-registers the remaining alarms of today's schedule from the saved plan, reading the current
+     * plan, first dose time and reminder offset. Called whenever any of them changes, after a reboot,
+     * when exact alarms are granted again (revoking them deletes every pending alarm) and on app start.
+     * Snoozed alarms are left alone.
      */
     suspend fun rescheduleAll() {
         val dataStoreManager = DataStoreManager(context)
-        val firstDoseTime = dataStoreManager.firstDoseTime.first() ?: return
-        val reminderOffset = dataStoreManager.reminderOffset.first()
         val medications = AppDatabase.getDatabase(context).medicationDao().getAllMedications().first()
 
-        var currentTime = firstDoseTime
-        medications.forEach { med ->
-            if (med != medications.firstOrNull()) {
-                currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
-            }
-            if (currentTime > System.currentTimeMillis()) {
-                scheduleAlarm(med.id, med.name, currentTime)
-            }
-            val reminderTime = currentTime - (reminderOffset * 60 * 1000)
-            if (reminderTime > System.currentTimeMillis()) {
-                scheduleAlarm(med.id, med.name, reminderTime, isReminder = true)
-            }
-        }
+        // Start clean so a dose that moved or no longer exists can't keep a stale alarm.
+        medications.forEach { cancelDoseAlarms(it.id) }
+
+        val firstDoseTime = dataStoreManager.firstDoseTime.first() ?: return
+        DoseSchedule.upcomingAlarms(
+            firstDoseTime = firstDoseTime,
+            medications = medications,
+            reminderOffsetMinutes = dataStoreManager.reminderOffset.first(),
+            now = System.currentTimeMillis()
+        ).forEach { scheduleAlarm(it.medId, it.medName, it.time, it.isReminder) }
     }
 
     fun snoozeAlarm(medId: Int, medName: String) {
         val snoozeTime = System.currentTimeMillis() + 5 * 60 * 1000 // 5 minutes
-        scheduleAlarm(medId, medName, snoozeTime, isReminder = false)
+        // Own request code, so rescheduling the day's doses doesn't drop a pending snooze.
+        scheduleExact(medId + SNOOZE_ID_OFFSET, medId, medName, snoozeTime, isReminder = false)
     }
 
+    /** Cancels everything for a medication: dose, reminder and snooze. */
     fun cancelAlarm(medId: Int) {
-        // Cancel main alarm
+        cancelDoseAlarms(medId)
+        cancelPendingIntent(medId + SNOOZE_ID_OFFSET)
+    }
+
+    private fun cancelDoseAlarms(medId: Int) {
         cancelPendingIntent(medId)
-        // Cancel reminder
         cancelPendingIntent(medId + REMINDER_ID_OFFSET)
     }
 

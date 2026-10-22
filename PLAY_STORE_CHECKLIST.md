@@ -75,22 +75,29 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
    - *Done (with P0 permissions):*
      - The reset stays exact when allowed and falls back to an inexact `setWindow` (no permission needed) otherwise. `scheduleAlarm` checks `canScheduleExactAlarms()`.
      - A reset delivered late no longer clears a schedule set after the reset time (`shouldClearOnReset`, unit-tested in `DailyResetTest`).
-2. [ ] **The reminder offset is ignored, and changing it never reschedules.**
+2. [x] **The reminder offset is ignored, and changing it never reschedules.**
    - Each NavHost destination gets its own `MedViewModel`. If nothing collects a `WhileSubscribed` StateFlow, its `.value` is just the initial value.
    - On Home, `scheduleAllAlarms` reads `reminderOffset.value` (`MedViewModel.kt:108`), which is never collected there, so it is always 15.
    - In Settings, `setReminderOffset` reads `firstDoseTime.value` (`MedViewModel.kt:90`), which is never collected there, so it is always null.
    - Fix: read the source inside the coroutine, e.g. `dataStoreManager.reminderOffset.first()` and `medicationDao.getAllMedications().first()`.
-3. [ ] **Overdue doses all ring at once.** `MedViewModel.kt:123` schedules each dose without checking that it is in the future (the reminder at line 127 does check). Setting a first-dose time earlier in the day makes every overdue alarm fire immediately.
+   - *Done (with P1-5):* scheduling always goes through `AlarmScheduler.rescheduleAll()`, which reads the plan, first dose time and offset from storage. Verified on Android 16: offset 30 → reminder at dose −30; changing it to 10 moves the reminder to dose −10 and removes the old one.
+3. [x] **Overdue doses all ring at once.** `MedViewModel.kt:123` schedules each dose without checking that it is in the future (the reminder at line 127 does check). Setting a first-dose time earlier in the day makes every overdue alarm fire immediately.
+   - *Done (with P1-5):* only doses and reminders still ahead are scheduled (unit-tested). Verified on Android 16: a first dose 2 h in the past schedules nothing and nothing rings.
 4. [ ] **Integer overflow and no input validation.**
    - `(intervalHours * 3600 + intervalMinutes * 60) * 1000` is computed as `Int` and overflows from about 597 h. Locations: `MedViewModel.kt:120`, `AlarmReceiver.kt:124`, `HomeScreen.kt:176`.
    - `offsetMin * 60 * 1000` has the same problem (`MedViewModel.kt:126`, `AlarmReceiver.kt:139`).
    - The hours/minutes fields accept any number of digits (`MedicationPlanScreen.kt:116,123`), and the offset field accepts negative values (`SettingsScreen.kt:191`).
    - Fix: use `Long` arithmetic (or `kotlin.time.Duration`) and validate ranges, e.g. minutes 0–59, hours 0–24, offset 0–120.
-5. [ ] **The schedule is computed in three places, and they disagree.**
+   - *Overflow done (with P1-5):* `DoseSchedule` computes in `Long` (unit test with a 700 h interval). Input validation is still open.
+5. [x] **The schedule is computed in three places, and they disagree.**
    - `MedViewModel.scheduleAllAlarms` skips the first medication.
    - `AlarmReceiver.rescheduleAlarms` (after a reboot) schedules it (`AlarmReceiver.kt:121`).
    - `HomeScreen.calculateScheduledTime` is a third copy.
    - Fix: extract one pure function (meds + first-dose time → list of `(medId, time, isReminder)`), use it in all three places, and unit-test it.
+   - *Done:*
+     - `alarm/DoseSchedule.kt` is the single source of truth, covered by 8 tests in `DoseScheduleTest`. The Home screen, the ViewModel and the scheduler (boot, permission grant, app start) all use it.
+     - Decision: the first medication gets an alarm too when its time is still ahead; a reminder offset of 0 turns reminders off.
+     - Snoozes now have their own request codes, so a reschedule doesn't drop them (verified).
 6. [ ] **Editing the plan during an active day breaks the schedule.**
    - Adding or deleting a medication doesn't reschedule the doses that follow it.
    - `orderIndex` isn't renumbered after a delete, so a later add can create a duplicate (`MedViewModel.kt:48`).

@@ -16,6 +16,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
+import io.github.dallanoce.medreminder.alarm.DoseSchedule
 import io.github.dallanoce.medreminder.data.local.room.Medication
 import io.github.dallanoce.medreminder.permissions.AlertPermission
 import io.github.dallanoce.medreminder.ui.MedViewModel
@@ -140,9 +141,13 @@ fun HomeScreen(
                 Text(text = stringResource(R.string.home_schedule_title), style = MaterialTheme.typography.titleMedium)
                 Spacer(modifier = Modifier.height(8.dp))
 
+                // Same calculation the alarms are scheduled from
+                val doses = remember(firstDoseTime, medications) {
+                    firstDoseTime?.let { DoseSchedule.doses(it, medications) }
+                }
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     itemsIndexed(medications) { index, med ->
-                        val scheduledTime = calculateScheduledTime(firstDoseTime, medications, index)
+                        val scheduledTime = doses?.getOrNull(index)?.time
                         ScheduleItem(med, scheduledTime)
                         if (index < medications.lastIndex) {
                             HorizontalDivider(
@@ -204,18 +209,6 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?) {
             }
         }
     )
-}
-
-fun calculateScheduledTime(firstDoseTime: Long?, medications: List<Medication>, index: Int): Long? {
-    if (firstDoseTime == null) return null
-    var currentTime = firstDoseTime
-    for (i in 0..index) {
-        if (i > 0) {
-            val med = medications[i]
-            currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
-        }
-    }
-    return currentTime
 }
 
 fun formatTime(timestamp: Long): String {

@@ -12,7 +12,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import java.util.Calendar
 
 class MedViewModel(application: Application) : AndroidViewModel(application) {
     private val database = AppDatabase.getDatabase(application)
@@ -61,7 +60,7 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     fun setFirstDoseTime(timestamp: Long) {
         viewModelScope.launch {
             dataStoreManager.saveFirstDoseTime(timestamp)
-            scheduleAllAlarms(timestamp)
+            alarmScheduler.rescheduleAll()
         }
     }
 
@@ -86,47 +85,18 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     fun setReminderOffset(offset: Int) {
         viewModelScope.launch {
             dataStoreManager.saveReminderOffset(offset)
-            // Reschedule alarms with new offset if first dose is set
-            val firstDose = firstDoseTime.value
-            if (firstDose != null) {
-                scheduleAllAlarms(firstDose)
-            }
+            // Moves today's reminders to the new offset (does nothing if no schedule is active)
+            alarmScheduler.rescheduleAll()
         }
     }
 
+    // Each screen has its own MedViewModel, so the StateFlows above may not be collected here:
+    // read the plan from the database instead of medications.value.
     fun clearDay() {
         viewModelScope.launch {
             dataStoreManager.clearFirstDoseTime()
-            medications.value.forEach {
+            medicationDao.getAllMedications().first().forEach {
                 alarmScheduler.cancelAlarm(it.id)
-            }
-        }
-    }
-
-    private fun scheduleAllAlarms(firstDoseTimestamp: Long) {
-        val meds = medications.value
-        val offsetMin = reminderOffset.value
-        var currentTime = firstDoseTimestamp
-        
-        meds.forEach { med ->
-            if (med == meds.firstOrNull()) {
-                // First medication of the day: usually no alarm per original code logic
-                // But we should probably keep consistency with AlarmReceiver rescheduling logic if any.
-                // Original MedViewModel didn't schedule for first med.
-                // Let's stick to that but add reminder if applicable? 
-                // Actually, the user says "add a reminder 15 min before the actual time of medication".
-                // If the first med has no alarm, it probably shouldn't have a reminder either.
-            } else {
-                currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
-                
-                // Schedule main alarm
-                alarmScheduler.scheduleAlarm(med.id, med.name, currentTime)
-                
-                // Schedule reminder
-                val reminderTime = currentTime - (offsetMin * 60 * 1000)
-                if (reminderTime > System.currentTimeMillis()) {
-                    alarmScheduler.scheduleAlarm(med.id, med.name, reminderTime, isReminder = true)
-                }
             }
         }
     }
