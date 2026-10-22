@@ -2,7 +2,7 @@ package io.github.dallanoce.medreminder.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -44,8 +44,8 @@ fun MedicationPlanScreen(viewModel: MedViewModel = viewModel()) {
                 }
             } else {
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(medications) { med ->
-                        MedicationItem(med, onDelete = { viewModel.deleteMedication(med) })
+                    itemsIndexed(medications, key = { _, med -> med.id }) { index, med ->
+                        MedicationItem(med, isFirst = index == 0, onDelete = { viewModel.deleteMedication(med) })
                     }
                 }
             }
@@ -65,7 +65,7 @@ fun MedicationPlanScreen(viewModel: MedViewModel = viewModel()) {
 }
 
 @Composable
-fun MedicationItem(medication: Medication, onDelete: () -> Unit) {
+fun MedicationItem(medication: Medication, isFirst: Boolean, onDelete: () -> Unit) {
     Card(
         modifier = Modifier.fillMaxWidth().padding(8.dp),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
@@ -76,7 +76,7 @@ fun MedicationItem(medication: Medication, onDelete: () -> Unit) {
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = medication.name, style = MaterialTheme.typography.titleLarge)
-                if (medication.orderIndex > 0) {
+                if (!isFirst) {
                     Text(
                         text = stringResource(R.string.plan_interval_text, medication.intervalHours, medication.intervalMinutes),
                         style = MaterialTheme.typography.bodyMedium

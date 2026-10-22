@@ -37,23 +37,25 @@ class MedViewModel(application: Application) : AndroidViewModel(application) {
     val reminderOffset: StateFlow<Int> = dataStoreManager.reminderOffset
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 15)
 
+    // Editing the plan while a day is active reschedules the doses that follow the change.
     fun addMedication(name: String, hours: Int, minutes: Int) {
         viewModelScope.launch {
-            val currentMeds = medications.value
             val newMed = Medication(
                 name = name,
                 intervalHours = hours,
                 intervalMinutes = minutes,
-                orderIndex = currentMeds.size
+                orderIndex = medicationDao.nextOrderIndex()
             )
             medicationDao.insertMedication(newMed)
+            alarmScheduler.rescheduleAll()
         }
     }
 
     fun deleteMedication(medication: Medication) {
         viewModelScope.launch {
-            medicationDao.deleteMedication(medication)
             alarmScheduler.cancelAlarm(medication.id)
+            medicationDao.deleteAndRenumber(medication)
+            alarmScheduler.rescheduleAll()
         }
     }
 

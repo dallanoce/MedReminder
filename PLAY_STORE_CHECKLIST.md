@@ -102,11 +102,15 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
      - `alarm/DoseSchedule.kt` is the single source of truth, covered by 8 tests in `DoseScheduleTest`. The Home screen, the ViewModel and the scheduler (boot, permission grant, app start) all use it.
      - Decision: the first medication gets an alarm too when its time is still ahead; a reminder offset of 0 turns reminders off.
      - Snoozes now have their own request codes, so a reschedule doesn't drop them (verified).
-6. [ ] **Editing the plan during an active day breaks the schedule.**
+6. [x] **Editing the plan during an active day breaks the schedule.**
    - Adding or deleting a medication doesn't reschedule the doses that follow it.
    - `orderIndex` isn't renumbered after a delete, so a later add can create a duplicate (`MedViewModel.kt:48`).
    - The UI decides which medication is first from `orderIndex > 0` (`HomeScreen.kt:161`, `MedicationPlanScreen.kt:75`), but scheduling uses list position, so the two can disagree.
    - `MedicationDao.updatePlan` already renumbers correctly but is never called.
+   - *Done:*
+     - Adding or deleting a medication reschedules the day. A delete renumbers the remaining medications in one transaction (`deleteAndRenumber`, replacing the unused `updatePlan`), and new medications get the next free position.
+     - Both screens now decide which medication is first from list position.
+     - 3 instrumented Room tests in `MedicationDaoTest`. Verified on Android 16: deleting a middle or the first medication and adding a new one moves the alarms accordingly.
 7. [ ] **The alarm sound can crash or stop after one play.**
    - `RingtoneManager.getRingtone()` returns null when the saved URI no longer exists (e.g. a deleted ringtone, or a backup restored on a new phone). That causes an NPE in `AlarmActivity.kt:171`, which crashes the alarm screen.
    - The ringtone isn't looped, so it plays once and goes quiet.

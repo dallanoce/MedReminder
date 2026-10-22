@@ -148,7 +148,7 @@ fun HomeScreen(
                 LazyColumn(modifier = Modifier.fillMaxSize()) {
                     itemsIndexed(medications) { index, med ->
                         val scheduledTime = doses?.getOrNull(index)?.time
-                        ScheduleItem(med, scheduledTime)
+                        ScheduleItem(med, scheduledTime, isFirst = index == 0)
                         if (index < medications.lastIndex) {
                             HorizontalDivider(
                                 modifier = Modifier.padding(vertical = 4.dp),
@@ -191,7 +191,7 @@ private fun PermissionWarning(onFix: () -> Unit) {
 }
 
 @Composable
-fun ScheduleItem(medication: Medication, scheduledTime: Long?) {
+fun ScheduleItem(medication: Medication, scheduledTime: Long?, isFirst: Boolean) {
     ListItem(
         headlineContent = { Text(medication.name) },
         supportingContent = {
@@ -202,7 +202,7 @@ fun ScheduleItem(medication: Medication, scheduledTime: Long?) {
             }
         },
         overlineContent = {
-            if (medication.orderIndex > 0) {
+            if (!isFirst) {
                 Text(stringResource(R.string.home_interval_from_prev, medication.intervalHours, medication.intervalMinutes))
             } else {
                 Text(stringResource(R.string.home_first_med_day))
