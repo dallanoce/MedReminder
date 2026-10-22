@@ -2,6 +2,18 @@
 
 Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradlew lintRelease` (0 errors, 56 warnings).
 
+## Status on branch `play_store_checks`
+
+Every code item below is done, tested on the Android 16 emulator and ticked, one commit per check (some closely related checks share a commit). What's left is yours:
+
+1. **Upload key:** create it and `keystore.properties` (`docs/RELEASE.md`).
+2. **Privacy policy:** replace `CONTACT_EMAIL` in `docs/privacy-policy.md` and enable GitHub Pages (*Settings → Pages → main / docs*). The app's Settings already links to that URL.
+3. **Play Console:** fill in the App content forms (`docs/play-store/console-answers.md`, including the full-screen intent declaration) and the store listing (`docs/play-store/listing.md`).
+4. **Graphics:** 512 px icon (source: `docs/play-store/icon-artwork.webp`), feature graphic, screenshots.
+5. **Closed test:** 12 testers for 14 days.
+6. **Older Android:** run `docs/TESTING.md` on Android 8, 12 and 14 and on a physical phone.
+7. **Later:** move to `compileSdk = 37` to take the newest AndroidX/Compose releases.
+
 **Priority levels**
 - **P0** — Play Console will reject or block the release.
 - **P1** — Bugs that cause missed, silent or crashing alarms. For a medication app these are as serious as blockers, and they show up in Play vitals (crashes, ANRs) and in reviews.
