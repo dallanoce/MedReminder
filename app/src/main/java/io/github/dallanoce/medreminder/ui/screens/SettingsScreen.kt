@@ -37,7 +37,8 @@ import io.github.dallanoce.medreminder.ui.MedViewModel
 fun SettingsScreen(viewModel: MedViewModel = viewModel()) {
     val context = LocalContext.current
     val ringtoneUri by viewModel.ringtoneUri.collectAsState()
-    val language by viewModel.language.collectAsState()
+    // The language actually applied; it can also be changed from the system's app settings.
+    val language = AppCompatDelegate.getApplicationLocales()[0]?.language
     val userName by viewModel.userName.collectAsState()
     val reminderOffset by viewModel.reminderOffset.collectAsState()
 

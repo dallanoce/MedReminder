@@ -10,7 +10,7 @@ import android.media.RingtoneManager
 import android.net.Uri
 import android.os.*
 import android.view.WindowManager
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -31,7 +31,7 @@ import io.github.dallanoce.medreminder.ui.theme.MedReminderTheme
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-class AlarmActivity : ComponentActivity() {
+class AlarmActivity : AppCompatActivity() {
     /** One alarm waiting for the user on this screen. */
     private data class PendingAlarm(
         val medId: Int,

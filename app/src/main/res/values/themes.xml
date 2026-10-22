@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.MedReminder" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- AppCompat: needed by AppCompatActivity (per-app language). DayNight: dark window background
+         in dark mode, so the app doesn't flash white while starting. -->
+    <style name="Theme.MedReminder" parent="Theme.AppCompat.DayNight.NoActionBar" />
 </resources>

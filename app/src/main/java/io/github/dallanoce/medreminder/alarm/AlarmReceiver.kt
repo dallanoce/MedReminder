@@ -4,12 +4,15 @@ import android.app.AlarmManager
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
+import android.os.Build
 import android.provider.Settings
 import io.github.dallanoce.medreminder.data.local.datastore.DataStoreManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import java.util.Locale
 
 class AlarmReceiver : BroadcastReceiver() {
     // Not exported: only the system (boot, permission change) and this app's own alarms reach it.
@@ -40,7 +43,8 @@ class AlarmReceiver : BroadcastReceiver() {
                 // Always post the notification: it rings until the user reacts, opens the alarm screen
                 // over the lock screen, and offers Taken / Snooze.
                 AlarmNotifications.show(
-                    context, medName, medId, dataStoreManager.userName.first(), isReminder,
+                    context.withAppLanguage(dataStoreManager.language.first()),
+                    medName, medId, dataStoreManager.userName.first(), isReminder,
                     reminderOffset, dataStoreManager.ringtoneUri.first()
                 )
 
@@ -56,6 +60,18 @@ class AlarmReceiver : BroadcastReceiver() {
                 pendingResult.finish()
             }
         }
+    }
+
+    /**
+     * Below Android 13 the in-app language only applies inside activities: apply it to the
+     * notification texts too. From Android 13 the system applies it to the whole app.
+     */
+    private fun Context.withAppLanguage(languageCode: String?): Context {
+        if (languageCode.isNullOrEmpty() || Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) return this
+        val configuration = Configuration(resources.configuration).apply {
+            setLocale(Locale.forLanguageTag(languageCode))
+        }
+        return createConfigurationContext(configuration)
     }
 
     private fun runDailyReset(context: Context) {

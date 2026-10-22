@@ -57,6 +57,13 @@ android {
     buildFeatures {
         compose = true
     }
+    bundle {
+        language {
+            // The app switches language itself (Settings), so every language must be installed:
+            // Play would otherwise only deliver the strings for the device's language.
+            enableSplit = false
+        }
+    }
 }
 
 kotlin {

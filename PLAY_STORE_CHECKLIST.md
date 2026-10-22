@@ -208,11 +208,19 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - The offset is a localized plural ("15 minutes before", "Off" for 0); the channel names and "Minutes" were already fixed in P1.
     - The language dialog offers "System default".
     - Verified in Italian on Android 16. Switching to English uncovered the language-switching bug below.
-- [ ] **Language switching on Android 8–12.**
+- [x] **Language switching (all Android versions).**
   - Below API 33, `AppCompatDelegate.setApplicationLocales` (`SettingsScreen.kt:245`) only takes effect in an `AppCompatActivity` that uses an AppCompat theme. To persist the choice it also needs `AppLocalesMetadataHolderService` (with `autoStoreLocales`) declared in the manifest.
   - `MainActivity` is a plain `ComponentActivity` and the theme is platform Material, so none of this is in place.
   - Test on an API 31 emulator.
-- [ ] **Dark mode.** `Theme.MedReminder` extends `Theme.Material.Light` (`values/themes.xml:4`), so the app flashes white on launch in dark mode. Use a DayNight parent.
+  - *Worse than expected:* on Android 16 the switch did nothing either. `setApplicationLocales()` finds the system `LocaleManager` through a registered `AppCompatActivity`, and the app had none, so the system app locale stayed `[]`.
+  - *Done:*
+    - `MainActivity` and `AlarmActivity` extend `AppCompatActivity`, with an AppCompat DayNight theme and `AppLocalesMetadataHolderService` (`autoStoreLocales`).
+    - Below Android 13, alarm notification texts use the saved language. Settings shows the language actually applied, including one picked in the system's app settings.
+    - Release AABs keep all languages (`bundle { language { enableSplit = false } }`). Lint pointed out that Play would otherwise install only the device language's strings, which breaks in-app switching.
+    - Verified on Android 16: switching to English updates the UI and the system app locale `[en]`, survives a restart, and the alarm notification is in English. "System default" clears it, and a change from the system setting is reflected.
+    - **Not verified on Android 8–12** (no emulator image installed).
+- [x] **Dark mode.** `Theme.MedReminder` extends `Theme.Material.Light` (`values/themes.xml:4`), so the app flashes white on launch in dark mode. Use a DayNight parent.
+  - *Done (with language switching):* `Theme.AppCompat.DayNight.NoActionBar`. Verified on Android 16 in night mode: the launch splash is dark, with no white flash.
 - [ ] **Time format.** 24-hour time is forced in two places: the time picker (`HomeScreen.kt:97`) and the `"HH:mm"` formatter (`HomeScreen.kt:183`). Respect `DateFormat.is24HourFormat(context)` and the locale's time format.
 - [ ] **Accessibility.** The font scale is capped at 1.3 (`Theme.kt:57`), and many users of a medication app need large text. Remove the cap and make the screens scroll instead.
 - [ ] **Settings → About:** add the privacy policy link, the medical disclaimer and the app version.
