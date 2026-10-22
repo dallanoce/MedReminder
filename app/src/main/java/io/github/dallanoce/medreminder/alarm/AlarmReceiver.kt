@@ -1,5 +1,6 @@
 package io.github.dallanoce.medreminder.alarm
 
+import android.app.AlarmManager
 import android.app.KeyguardManager
 import android.app.Notification
 import android.app.NotificationChannel
@@ -22,14 +23,16 @@ import kotlinx.coroutines.runBlocking
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
-        if (intent.action == Intent.ACTION_BOOT_COMPLETED) {
+        if (intent.action == Intent.ACTION_BOOT_COMPLETED ||
+            intent.action == AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED
+        ) {
+            // Alarms don't survive a reboot, and revoking exact alarms deletes them: restore them.
             rescheduleAlarms(context)
-            AlarmScheduler(context).scheduleDailyReset()
             return
         }
 
         if (intent.action == AlarmScheduler.ACTION_DAILY_RESET) {
-            handleDailyReset(context)
+            handleDailyReset(context, intent)
             return
         }
 
@@ -56,21 +59,23 @@ class AlarmReceiver : BroadcastReceiver() {
         }
     }
 
-    private fun handleDailyReset(context: Context) {
+    private fun handleDailyReset(context: Context, intent: Intent) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val dataStoreManager = DataStoreManager(context)
                 val database = AppDatabase.getDatabase(context)
-                val medications = database.medicationDao().getAllMedications().first()
                 val alarmScheduler = AlarmScheduler(context)
+                val resetTime = intent.getLongExtra(AlarmScheduler.EXTRA_RESET_TIME, System.currentTimeMillis())
 
-                // Clear the first dose time
-                dataStoreManager.clearFirstDoseTime()
+                if (AlarmScheduler.shouldClearOnReset(dataStoreManager.firstDoseTime.first(), resetTime)) {
+                    // Clear the first dose time
+                    dataStoreManager.clearFirstDoseTime()
 
-                // Cancel all existing medication alarms
-                medications.forEach { med ->
-                    alarmScheduler.cancelAlarm(med.id)
+                    // Cancel all existing medication alarms
+                    database.medicationDao().getAllMedications().first().forEach { med ->
+                        alarmScheduler.cancelAlarm(med.id)
+                    }
                 }
 
                 // Schedule next daily reset
@@ -107,38 +112,12 @@ class AlarmReceiver : BroadcastReceiver() {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val dataStoreManager = DataStoreManager(context)
-                val firstDoseTime = dataStoreManager.firstDoseTime.first()
-                val reminderOffset = dataStoreManager.reminderOffset.first()
-                
-                if (firstDoseTime != null) {
-                    val database = AppDatabase.getDatabase(context)
-                    val medications = database.medicationDao().getAllMedications().first()
-                    val alarmScheduler = AlarmScheduler(context)
-                    
-                    var currentTime = firstDoseTime
-                    medications.forEach { med ->
-                        if (med == medications.firstOrNull()) {
-                            scheduleAlarmAndReminder(alarmScheduler, med.id, med.name, currentTime, reminderOffset)
-                        } else {
-                            currentTime += (med.intervalHours * 3600 + med.intervalMinutes * 60) * 1000
-                            scheduleAlarmAndReminder(alarmScheduler, med.id, med.name, currentTime, reminderOffset)
-                        }
-                    }
-                }
+                val alarmScheduler = AlarmScheduler(context)
+                alarmScheduler.rescheduleAll()
+                alarmScheduler.scheduleDailyReset()
             } finally {
                 pendingResult.finish()
             }
-        }
-    }
-
-    private fun scheduleAlarmAndReminder(scheduler: AlarmScheduler, id: Int, name: String, time: Long, offsetMin: Int) {
-        if (time > System.currentTimeMillis()) {
-            scheduler.scheduleAlarm(id, name, time)
-        }
-        val reminderTime = time - (offsetMin * 60 * 1000)
-        if (reminderTime > System.currentTimeMillis()) {
-            scheduler.scheduleAlarm(id, name, reminderTime, isReminder = true)
         }
     }
 

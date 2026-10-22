@@ -7,9 +7,24 @@
     <string name="settings_label">Impostazioni</string>
 
     <!-- Permissions -->
-    <string name="perm_required_title">Permesso Richiesto</string>
-    <string name="perm_required_text">Questa app ha bisogno del permesso per impostare allarmi precisi per ricordarti le medicine in tempo.</string>
-    <string name="grant_perm_btn">Concedi Permesso</string>
+    <string name="perm_setup_title">Consenti gli avvisi critici</string>
+    <string name="perm_setup_intro">Per avvisarti all\'ora esatta di ogni dose, anche quando il telefono è bloccato o stai usando un\'altra app, Promemoria Medicine ha bisogno di questi permessi.</string>
+    <string name="perm_notifications_title">Notifiche</string>
+    <string name="perm_notifications_desc">Mostrare l\'avviso della dose, anche sulla schermata di blocco.</string>
+    <string name="perm_exact_title">Sveglie e promemoria</string>
+    <string name="perm_exact_desc">Suonare all\'ora esatta di ogni dose.</string>
+    <string name="perm_fullscreen_title">Notifiche a schermo intero</string>
+    <string name="perm_fullscreen_desc">Mostrare l\'allarme sopra la schermata di blocco.</string>
+    <string name="perm_overlay_title">Mostra sopra altre app</string>
+    <string name="perm_overlay_desc">Mostrare l\'allarme mentre stai usando un\'altra app.</string>
+    <string name="perm_allow_btn">Consenti</string>
+    <string name="perm_open_settings_btn">Apri impostazioni</string>
+    <string name="perm_granted">Consentito</string>
+    <string name="perm_continue_btn">Continua</string>
+    <string name="perm_continue_anyway_btn">Continua comunque</string>
+    <string name="perm_missing_warning">Alcuni avvisi delle dosi potrebbero non arrivare finché non consenti tutti i permessi.</string>
+    <string name="home_perm_banner">Gli avvisi potrebbero non funzionare: mancano alcuni permessi.</string>
+    <string name="home_perm_banner_fix">Risolvi</string>
 
     <!-- Home Screen -->
     <string name="home_title">Programma Giornaliero</string>

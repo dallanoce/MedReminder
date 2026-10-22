@@ -4,6 +4,8 @@ import android.app.TimePickerDialog
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -15,13 +17,18 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.dallanoce.medreminder.R
 import io.github.dallanoce.medreminder.data.local.room.Medication
+import io.github.dallanoce.medreminder.permissions.AlertPermission
 import io.github.dallanoce.medreminder.ui.MedViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun HomeScreen(viewModel: MedViewModel = viewModel()) {
+fun HomeScreen(
+    viewModel: MedViewModel = viewModel(),
+    missingPermissions: List<AlertPermission> = emptyList(),
+    onFixPermissions: () -> Unit = {}
+) {
     val medications by viewModel.medications.collectAsState()
     val firstDoseTime by viewModel.firstDoseTime.collectAsState()
     val userName by viewModel.userName.collectAsState()
@@ -51,6 +58,11 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                 .fillMaxSize()
                 .padding(16.dp)
         ) {
+            if (missingPermissions.isNotEmpty()) {
+                PermissionWarning(onFixPermissions)
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
             val greeting = if (!userName.isNullOrEmpty()) {
                 stringResource(R.string.home_greeting, userName!!)
             } else {
@@ -141,6 +153,33 @@ fun HomeScreen(viewModel: MedViewModel = viewModel()) {
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun PermissionWarning(onFix: () -> Unit) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.errorContainer,
+            contentColor = MaterialTheme.colorScheme.onErrorContainer
+        )
+    ) {
+        Row(
+            modifier = Modifier.padding(start = 16.dp, top = 8.dp, bottom = 8.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(Icons.Default.Warning, contentDescription = null)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = stringResource(R.string.home_perm_banner),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            TextButton(onClick = onFix) {
+                Text(stringResource(R.string.home_perm_banner_fix))
             }
         }
     }

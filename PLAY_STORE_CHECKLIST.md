@@ -32,7 +32,7 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
   - Back up the key and its passwords somewhere safe.
   - *Done:* `app/build.gradle.kts` signs release builds from `keystore.properties` and stays unsigned without it. Added `keystore.properties.example`, `docs/RELEASE.md` and the ignore rules. Verified with a throwaway key: the AAB passes `jarsigner` and the APK passes `apksigner`.
   - [ ] **You:** create the real upload key and `keystore.properties` (steps in `docs/RELEASE.md`) and back them up. Keep Play App Signing enabled on the first upload.
-- [ ] **Clean up permissions** (`app/src/main/AndroidManifest.xml`):
+- [x] **Clean up permissions** (`app/src/main/AndroidManifest.xml`):
   - **Keep** `SYSTEM_ALERT_WINDOW` (line 12) and actually request it. Tested on Android 16: it's the only thing that lets the alarm take over the screen while the phone is unlocked and in use (see P1-9). Today it's declared but never requested, so it has no effect.
   - Remove `USE_EXACT_ALARM` (line 8). Play reserves it for alarm-clock/timer and calendar apps, so a medication reminder risks rejection. Keep `SCHEDULE_EXACT_ALARM`, which the app already has a grant flow for.
     - **Do this together with P1-1.** Tested on Android 16: without `USE_EXACT_ALARM`, a fresh install starts with exact alarms off, and the current code crashes on first launch.
@@ -40,6 +40,16 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
     - The only lasting difference is that the user can revoke the grant later. That kills the app and deletes every pending alarm without any callback, so reschedule on every app start and on `ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED`.
   - Keep `USE_FULL_SCREEN_INTENT` (line 6) but complete its Play Console declaration (alarm use). On Android 14+, Play auto-grants it only to calling and alarm apps, so the code must also cope with it being off (P1-8).
   - Remove `WAKE_LOCK` (line 9). It's unused, and AlarmManager already holds a wake lock while the receiver runs.
+  - *Done:*
+    - `USE_EXACT_ALARM` and `WAKE_LOCK` are removed; `SYSTEM_ALERT_WINDOW` is kept and requested.
+    - A new setup screen (`PermissionsScreen`) shows the status of notifications, alarms & reminders, full screen notifications and display over other apps. Each "Allow" button opens the matching Settings page, and "Continue anyway" is always visible.
+    - Home shows a warning banner with a "Fix" button while anything is missing.
+    - Alarms are restored on app start and on `ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED`.
+    - Verified on Android 16:
+      - a fresh install without exact-alarm access no longer crashes
+      - revoking the access deletes the alarms, and granting it again restores them without opening the app
+      - after a force-stop, opening the app restores them
+  - [ ] **You:** complete the full-screen intent declaration in Play Console (*App content → Full-screen intent*: alarm functionality).
 - [ ] **Play Console "App content" forms.** These involve no code but are required:
   - **Privacy policy:** a public URL that isn't a PDF. The app stores a user name and medication names, which count as health-related data. Health apps must also link the policy inside the app (see P2, "Settings → About").
   - **Health apps declaration:** declare medication or treatment management.
@@ -53,10 +63,13 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
 
 ## P1 — Reliability bugs (missed, silent or crashing alarms)
 
-1. [ ] **Crash on launch without exact-alarm permission.**
+1. [x] **Crash on launch without exact-alarm permission.**
    - `MainActivity.onCreate` calls `scheduleDailyReset()` (`MainActivity.kt:47`), which calls `setExactAndAllowWhileIdle` (`AlarmScheduler.kt:86`) with no permission check. That throws `SecurityException`.
    - Today this crash happens on Android 12/12L if the user revokes "Alarms & reminders". Once `USE_EXACT_ALARM` is removed, it happens on every fresh install on Android 14+.
    - Fix: the 03:00 reset doesn't need to be exact, so use `setAndAllowWhileIdle()` for it. Guard every exact call with `canScheduleExactAlarms()`.
+   - *Done (with P0 permissions):*
+     - The reset stays exact when allowed and falls back to an inexact `setWindow` (no permission needed) otherwise. `scheduleAlarm` checks `canScheduleExactAlarms()`.
+     - A reset delivered late no longer clears a schedule set after the reset time (`shouldClearOnReset`, unit-tested in `DailyResetTest`).
 2. [ ] **The reminder offset is ignored, and changing it never reschedules.**
    - Each NavHost destination gets its own `MedViewModel`. If nothing collects a `WhileSubscribed` StateFlow, its `.value` is just the initial value.
    - On Home, `scheduleAllAlarms` reads `reminderOffset.value` (`MedViewModel.kt:108`), which is never collected there, so it is always 15.
@@ -87,14 +100,14 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
    - If `POST_NOTIFICATIONS` is denied, the app shows no rationale and gives no way to re-enable it (`MainActivity.kt:80`). Verified on Android 16: with the phone locked and notifications denied, the screen stays off and nothing appears.
    - Fix part 1: create a new channel ID with alarm sound (`USAGE_ALARM`) and vibration, and set `FLAG_INSISTENT` on the notification.
    - Fix part 2: add Taken / Snooze action buttons to the notification.
-   - Fix part 3: show a persistent warning on Home, with a Settings deep link, whenever notifications, full-screen intents or exact alarms are disabled.
+   - Fix part 3: show a persistent warning on Home, with a Settings deep link, whenever notifications, full-screen intents or exact alarms are disabled. *(Done with P0 permissions: Home banner + setup screen.)*
 9. [ ] **When the phone is unlocked and in use, the alert is lost completely (verified on Android 16).**
    - When the phone is unlocked, `AlarmReceiver.kt:97` calls `startActivity` from the background.
    - Android blocked the launch (`Background activity launch blocked … BAL_BLOCK`) without throwing an exception. The `catch` fallback never ran, so there was no screen, no notification and no sound.
    - With "Display over other apps" granted, the same launch was allowed (`BAL_ALLOW_SAW_PERMISSION`) and the alarm took over the screen.
    - Fix part 1: always post the full-screen-intent notification with sound. Locked, it opens full screen; unlocked, it shows as a heads-up.
    - Fix part 2: additionally call `startActivity` when `Settings.canDrawOverlays()` is true, so the alarm takes over the screen even while the phone is in use.
-   - Fix part 3: request the overlay permission during onboarding (`Settings.ACTION_MANAGE_OVERLAY_PERMISSION`).
+   - Fix part 3: request the overlay permission during onboarding (`Settings.ACTION_MANAGE_OVERLAY_PERMISSION`). *(Done with P0 permissions.)*
 10. [ ] **Two doses due at the same time.**
     - `AlarmActivity` is `singleInstance` (`AndroidManifest.xml:41`) but doesn't override `onNewIntent`.
     - So if a second alarm arrives while the first is on screen, it still shows the first medication's name, and the second `ongoing` notification is never cancelled.
@@ -103,10 +116,11 @@ Based on a review of the codebase at commit `6d74e80` (2026-10-22) and `./gradle
 12. [ ] **The receiver is exported.** `AlarmReceiver` has `exported="true"` (`AndroidManifest.xml:48`), so any installed app can trigger a fake alarm or the daily reset.
     - Fix: set `exported="false"`. `BOOT_COMPLETED` comes from the system, so it is still delivered.
     - Also check `intent.action` explicitly.
-13. [ ] **`scheduleAlarm` opens Settings from any context** (`AlarmScheduler.kt:21-28`).
+13. [x] **`scheduleAlarm` opens Settings from any context** (`AlarmScheduler.kt:21-28`).
     - When it's called from the boot receiver, that launch is blocked and the alarm is silently dropped.
     - Fix: return a result so the UI can react.
     - Also reschedule all alarms on `AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED`.
+    - *Done (with P0 permissions):* `scheduleAlarm` returns `false` instead of opening Settings, and the setup screen and Home banner surface the missing permission. The receiver reschedules everything on the permission broadcast.
 14. [ ] **Consider `setAlarmClock()` for doses.** It is the API meant for user-visible alarms (it also needs the exact-alarm permission). Doze doesn't throttle it the way it throttles `setExactAndAllowWhileIdle`, and the system shows the next alarm in the status bar.
 15. [ ] **Decide how the 03:00 reset should behave.** It cancels every dose scheduled after 3 AM, so a plan started in the evening loses its night doses (`AlarmReceiver.kt:59-82`).
 

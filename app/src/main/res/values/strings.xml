@@ -7,9 +7,24 @@
     <string name="settings_label">Settings</string>
 
     <!-- Permissions -->
-    <string name="perm_required_title">Permission Required</string>
-    <string name="perm_required_text">This app needs permission to set exact alarms to remind you of your medication on time.</string>
-    <string name="grant_perm_btn">Grant Permission</string>
+    <string name="perm_setup_title">Allow critical alerts</string>
+    <string name="perm_setup_intro">To alert you at the exact time of every dose, even when the phone is locked or you are using another app, MedReminder needs these permissions.</string>
+    <string name="perm_notifications_title">Notifications</string>
+    <string name="perm_notifications_desc">Show the dose alert, also on the lock screen.</string>
+    <string name="perm_exact_title">Alarms &amp; reminders</string>
+    <string name="perm_exact_desc">Ring at the exact time of each dose.</string>
+    <string name="perm_fullscreen_title">Full screen notifications</string>
+    <string name="perm_fullscreen_desc">Show the alarm over the lock screen.</string>
+    <string name="perm_overlay_title">Display over other apps</string>
+    <string name="perm_overlay_desc">Show the alarm while you are using another app.</string>
+    <string name="perm_allow_btn">Allow</string>
+    <string name="perm_open_settings_btn">Open settings</string>
+    <string name="perm_granted">Allowed</string>
+    <string name="perm_continue_btn">Continue</string>
+    <string name="perm_continue_anyway_btn">Continue anyway</string>
+    <string name="perm_missing_warning">Some dose alerts may be missed until all permissions are allowed.</string>
+    <string name="home_perm_banner">Alerts may not work: some permissions are missing.</string>
+    <string name="home_perm_banner_fix">Fix</string>
 
     <!-- Home Screen -->
     <string name="home_title">Daily Schedule</string>
