@@ -6,7 +6,7 @@ Re-check the answers if the app gains network access, analytics, ads or accounts
 
 ## Privacy policy
 
-1. Replace `CONTACT_EMAIL` in `docs/privacy-policy.md` with the address you want to publish.
+1. The contact address in `docs/privacy-policy.md` is `dallanoce.fd@gmail.com`; change it there if needed.
 2. Enable GitHub Pages: repository *Settings → Pages → Deploy from a branch → `main` / `docs`*.
    Pages on a private repository needs a paid GitHub plan; otherwise host the page elsewhere.
 3. The policy is then at `https://dallanoce.github.io/MedReminder/privacy-policy.html`.

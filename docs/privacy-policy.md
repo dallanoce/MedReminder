@@ -62,7 +62,7 @@ any medical condition. Always follow the instructions of your doctor or pharmaci
 ## Changes and contact
 
 If this policy changes, the new version will be published at this address with a new date.
-Questions: **CONTACT_EMAIL**
+Questions: [dallanoce.fd@gmail.com](mailto:dallanoce.fd@gmail.com)
 
 ---
 
@@ -125,4 +125,4 @@ guarisce né previene alcuna condizione medica. Segui sempre le indicazioni del 
 ## Modifiche e contatti
 
 Se questa informativa cambia, la nuova versione sarà pubblicata a questo indirizzo con una nuova data.
-Domande: **CONTACT_EMAIL**
+Domande: [dallanoce.fd@gmail.com](mailto:dallanoce.fd@gmail.com)
