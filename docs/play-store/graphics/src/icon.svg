@@ -1,0 +1,19 @@
+<!-- Play Store icon: the adaptive launcher icon (res/drawable/ic_launcher_*.xml) cropped to its
+     visible 72dp area. Play adds the rounded corners and shadow itself. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72">
+  <defs>
+    <linearGradient id="bg" gradientUnits="userSpaceOnUse" x1="18" y1="18" x2="90" y2="90">
+      <stop offset="0" stop-color="#1E7FCC"/>
+      <stop offset="1" stop-color="#135FA9"/>
+    </linearGradient>
+  </defs>
+  <rect width="108" height="108" fill="url(#bg)"/>
+  <g id="glyph" fill="none" stroke="#FFFFFF">
+    <path stroke-width="2.3" d="M37.5,57 A17.9,17.9 0 1,1 69.5,57"/>
+    <path stroke-width="1.7" stroke-linecap="round" d="M53.75,49.5 L53.75,36.2"/>
+    <path stroke-width="2" stroke-linecap="round" d="M53.75,49.5 L46,53.8"/>
+    <path fill="#FFFFFF" stroke="none" d="M53.6,49.6 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0"/>
+    <path stroke-width="2" d="M41.5,58.5 H66 A8.5,8.5 0 0,1 66,75.5 H41.5 A8.5,8.5 0 0,1 41.5,58.5 Z"/>
+    <path fill="#FFFFFF" fill-rule="evenodd" stroke="none" d="M54,58.5 H66 A8.5,8.5 0 0,1 66,75.5 H54 Z M62.75,62 H66.25 V66 H70.25 V69 H66.25 V73 H62.75 V69 H58.75 V66 H62.75 Z"/>
+  </g>
+</svg>

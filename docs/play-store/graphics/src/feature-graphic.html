@@ -1,0 +1,58 @@
+<!doctype html>
+<!-- Play Store feature graphic, 1024 x 500. The language comes from the URL hash: #en (default) or #it.
+     Rendered to PNG by render.ps1. The titles match the app names in docs/play-store/listing.md. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  html, body { margin: 0; width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    background: linear-gradient(135deg, #1E7FCC 0%, #135FA9 100%);
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    gap: 56px;
+    padding: 0 88px 0 96px;
+    box-sizing: border-box;
+    position: relative;
+  }
+  /* faint oversized clock ring behind the text, echoing the icon */
+  .ring {
+    position: absolute; right: -150px; top: -120px;
+    width: 560px; height: 560px; border-radius: 50%;
+    border: 34px solid rgba(255, 255, 255, 0.06);
+  }
+  .glyph { flex: none; width: 250px; height: 250px; position: relative; }
+  .text { position: relative; }
+  h1 { margin: 0 0 18px; font-size: 64px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.05; }
+  p { margin: 0; font-size: 31px; font-weight: 400; line-height: 1.3; opacity: 0.92; max-width: 560px; }
+</style>
+</head>
+<body>
+  <div class="ring"></div>
+  <svg class="glyph" viewBox="29 27 50 50" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" stroke="#FFFFFF">
+      <path stroke-width="2.3" d="M37.5,57 A17.9,17.9 0 1,1 69.5,57"/>
+      <path stroke-width="1.7" stroke-linecap="round" d="M53.75,49.5 L53.75,36.2"/>
+      <path stroke-width="2" stroke-linecap="round" d="M53.75,49.5 L46,53.8"/>
+      <path fill="#FFFFFF" stroke="none" d="M53.6,49.6 m-1.8,0 a1.8,1.8 0 1,0 3.6,0 a1.8,1.8 0 1,0 -3.6,0"/>
+      <path stroke-width="2" d="M41.5,58.5 H66 A8.5,8.5 0 0,1 66,75.5 H41.5 A8.5,8.5 0 0,1 41.5,58.5 Z"/>
+      <path fill="#FFFFFF" fill-rule="evenodd" stroke="none" d="M54,58.5 H66 A8.5,8.5 0 0,1 66,75.5 H54 Z M62.75,62 H66.25 V66 H70.25 V69 H66.25 V73 H62.75 V69 H58.75 V66 H62.75 Z"/>
+    </g>
+  </svg>
+  <div class="text">
+    <h1 id="title"></h1>
+    <p id="tagline"></p>
+  </div>
+  <script>
+    const texts = {
+      en: ["MedReminder", "Dose alarms that adapt to when you take your first dose each day."],
+      it: ["Promemoria Medicine", "Allarmi che si adattano a quando prendi la prima dose del giorno."],
+    };
+    const [title, tagline] = texts[location.hash.slice(1)] || texts.en;
+    document.getElementById("title").textContent = title;
+    document.getElementById("tagline").textContent = tagline;
+  </script>
+</body>
+</html>

@@ -59,8 +59,15 @@ Promemoria Medicine è uno strumento di promemoria. Non è un dispositivo medico
 - **Website:** optional, e.g. `https://dallanoce.github.io/MedReminder/`
 - **Privacy policy:** `https://dallanoce.github.io/MedReminder/privacy-policy.html` (see `docs/play-store/console-answers.md`)
 
-## Graphics to prepare
+## Graphics
 
-- App icon: 512 × 512 PNG, 32-bit, up to 1 MB (export from the final launcher icon artwork).
-- Feature graphic: 1024 × 500 PNG or JPEG.
-- Phone screenshots: at least 2, ideally 4–8 (Home with a schedule, Therapy plan, the alarm screen, Settings), in both languages.
+Ready to upload, in `docs/play-store/graphics/`:
+
+- App icon: `icon-512.png` (512 × 512, 32-bit PNG), the launcher icon's vectors.
+- Feature graphic: `feature-graphic-en.png` for the default listing, `feature-graphic-it.png` for the Italian
+  translation (1024 × 500, 24-bit PNG).
+- Phone screenshots: `screenshots/en/` and `screenshots/it/`, upload in file order (Home, the alarm, the plan,
+  Settings). 1080 × 1920, 24-bit PNG; Play rejects screenshots more than twice as tall as they are wide.
+
+The icon and feature graphics are rendered from `graphics/src/` by `graphics/render.ps1`. The screenshots come from
+the release build on the Android 16 emulator, with sample data and the system demo mode status bar.
