@@ -21,6 +21,7 @@ is lost, it can be reset through Play Console support, but releases are blocked 
    uploaded, on any track) and update `versionName` (MAJOR.MINOR.PATCH):
    - PATCH for fixes (1.0.0 → 1.0.1), MINOR for new features (1.0.1 → 1.1.0), MAJOR for big changes.
    - Database schema changes need a version bump in `AppDatabase` and a migration test (see `MigrationTest`).
+   - Update the version badge at the top of `README.md` to the new `versionName`.
 2. Build the App Bundle:
 
    ```bash
