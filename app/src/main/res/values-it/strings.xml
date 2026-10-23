@@ -7,9 +7,24 @@
     <string name="settings_label">Impostazioni</string>
 
     <!-- Permissions -->
-    <string name="perm_required_title">Permesso Richiesto</string>
-    <string name="perm_required_text">Questa app ha bisogno del permesso per impostare allarmi precisi per ricordarti le medicine in tempo.</string>
-    <string name="grant_perm_btn">Concedi Permesso</string>
+    <string name="perm_setup_title">Consenti gli avvisi critici</string>
+    <string name="perm_setup_intro">Per avvisarti all\'ora esatta di ogni dose, anche quando il telefono è bloccato o stai usando un\'altra app, Promemoria Medicine ha bisogno di questi permessi.</string>
+    <string name="perm_notifications_title">Notifiche</string>
+    <string name="perm_notifications_desc">Mostrare l\'avviso della dose, anche sulla schermata di blocco.</string>
+    <string name="perm_exact_title">Sveglie e promemoria</string>
+    <string name="perm_exact_desc">Suonare all\'ora esatta di ogni dose.</string>
+    <string name="perm_fullscreen_title">Notifiche a schermo intero</string>
+    <string name="perm_fullscreen_desc">Mostrare l\'allarme sopra la schermata di blocco.</string>
+    <string name="perm_overlay_title">Mostra sopra altre app</string>
+    <string name="perm_overlay_desc">Mostrare l\'allarme mentre stai usando un\'altra app.</string>
+    <string name="perm_allow_btn">Consenti</string>
+    <string name="perm_open_settings_btn">Apri impostazioni</string>
+    <string name="perm_granted">Consentito</string>
+    <string name="perm_continue_btn">Continua</string>
+    <string name="perm_continue_anyway_btn">Continua comunque</string>
+    <string name="perm_missing_warning">Alcuni avvisi delle dosi potrebbero non arrivare finché non consenti tutti i permessi.</string>
+    <string name="home_perm_banner">Gli avvisi potrebbero non funzionare: mancano alcuni permessi.</string>
+    <string name="home_perm_banner_fix">Risolvi</string>
 
     <!-- Home Screen -->
     <string name="home_title">Programma Giornaliero</string>
@@ -18,13 +33,18 @@
     <string name="home_set_first_dose">IMPOSTA ORA PRIMA ASSUNZIONE</string>
     <string name="home_first_dose_at">Prima assunzione alle: %1$s</string>
     <string name="home_reset">RESETTA</string>
+    <string name="reset_confirm_title">Azzerare il programma di oggi?</string>
+    <string name="reset_confirm_text">Gli allarmi delle dosi rimanenti di oggi verranno annullati. Potrai poi impostare di nuovo l\'ora della prima assunzione.</string>
+    <string name="reset_confirm_btn">Azzera</string>
     <string name="home_schedule_title">Programma</string>
     <string name="home_scheduled_at">Prevista alle: %1$s</string>
     <string name="home_waiting_first_dose">In attesa dell\'ora della prima assunzione</string>
     <string name="home_interval_from_prev">+ %1$sh %2$sm dalla precedente</string>
+    <string name="time_tomorrow">%1$s (domani)</string>
+    <string name="time_yesterday">%1$s (ieri)</string>
     <string name="home_first_med_day">Prima medicina del giorno</string>
     <string name="home_greeting">Ciao %1$s</string>
-    <string name="home_greeting_default">Ciao User</string>
+    <string name="home_greeting_default">Ciao</string>
 
     <!-- Medication Plan Screen -->
     <string name="plan_title">Piano Terapeutico</string>
@@ -39,6 +59,8 @@
     <string name="hours_label">Ore</string>
     <string name="minutes_label">Minuti</string>
     <string name="interval_hint">Intervallo dalla medicina precedente</string>
+    <string name="error_interval">Usa 0–24 ore e 0–59 minuti (al massimo 24 ore).</string>
+    <string name="error_med_name_length">Troppo lungo (max %1$d).</string>
     <string name="add_btn">Aggiungi</string>
     <string name="cancel_btn">Annulla</string>
 
@@ -54,8 +76,21 @@
     <string name="select_lang_title">Seleziona Lingua</string>
     <string name="user_name_setting_label">Nome Utente</string>
     <string name="user_name_hint">Inserisci il tuo nome</string>
+    <string name="user_name_not_set">Non impostato</string>
+    <string name="reminder_off">Disattivato</string>
     <string name="reminder_offset_label">Anticipo Promemoria (minuti)</string>
+    <string name="reminder_offset_hint">Minuti prima della dose (0–%1$d). 0 = nessun promemoria.</string>
     <string name="save_btn">Salva</string>
+    <string name="privacy_policy_label">Informativa sulla privacy</string>
+    <string name="about_label">Informazioni</string>
+    <string name="about_version">Versione %1$s</string>
+    <string name="medical_disclaimer">Promemoria Medicine è uno strumento di promemoria. Non è un dispositivo medico e non diagnostica, cura, guarisce né previene alcuna condizione medica. Segui sempre le indicazioni del tuo medico o farmacista e rivolgiti a un professionista sanitario per consigli medici.</string>
+
+    <!-- Notification channels -->
+    <string name="channel_dose_alarms">Allarmi delle dosi</string>
+    <string name="channel_dose_alarms_desc">Suona all\'ora di ogni dose finché non la confermi.</string>
+    <string name="channel_reminders">Promemoria delle dosi in arrivo</string>
+    <string name="channel_reminders_desc">Ti avvisa qualche minuto prima di ogni dose.</string>
 
     <!-- Alarm Activity -->
     <string name="alarm_title">È ora della tua medicina!</string>
@@ -66,4 +101,14 @@
     <string name="alarm_message">%1$s, è ora di prendere la tua medicina: %2$s</string>
     <string name="alarm_message_default">È ora di prendere la tua medicina: %1$s</string>
     <string name="reminder_message">Ricorda, c\'è una medicina in arrivo tra %1$d min: %2$s</string>
+    <plurals name="alarm_more_waiting">
+        <item quantity="one">%d altra medicina in attesa</item>
+        <item quantity="many">%d altre medicine in attesa</item>
+        <item quantity="other">%d altre medicine in attesa</item>
+    </plurals>
+    <plurals name="reminder_minutes_before">
+        <item quantity="one">%d minuto prima</item>
+        <item quantity="many">%d minuti prima</item>
+        <item quantity="other">%d minuti prima</item>
+    </plurals>
 </resources>

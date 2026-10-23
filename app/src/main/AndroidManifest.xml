@@ -5,10 +5,9 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
-    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Lets the dose alarm take over the screen while the phone is unlocked and in use -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <application
@@ -20,12 +19,12 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.MedReminder"
-        android:localeConfig="@xml/locales_config">
+        android:localeConfig="@xml/locales_config"
+        tools:targetApi="33">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
             android:theme="@style/Theme.MedReminder">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -38,6 +37,7 @@
             android:showWhenLocked="true"
             android:showForAllUsers="true"
             android:turnScreenOn="true"
+            tools:targetApi="27"
             android:launchMode="singleInstance"
             android:excludeFromRecents="true"
             android:exported="false"
@@ -45,11 +45,26 @@
 
         <receiver
             android:name=".alarm.AlarmReceiver"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
             </intent-filter>
         </receiver>
+
+        <!-- Persists the in-app language on Android 12 and below (Android 13+ stores it itself). -->
+        <service
+            android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
+            android:enabled="false"
+            android:exported="false">
+            <meta-data
+                android:name="autoStoreLocales"
+                android:value="true" />
+        </service>
+
+        <receiver
+            android:name=".alarm.AlarmActionReceiver"
+            android:exported="false" />
 
     </application>
 
