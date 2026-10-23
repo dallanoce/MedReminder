@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
+import android.graphics.Color
 import android.media.AudioAttributes
 import android.media.Ringtone
 import android.media.RingtoneManager
@@ -11,7 +12,9 @@ import android.net.Uri
 import android.os.*
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.core.net.toUri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -21,6 +24,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color as ComposeColor
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -155,6 +159,15 @@ class AlarmActivity : AppCompatActivity() {
             MaterialTheme.colorScheme.onErrorContainer
         }
 
+        // The background runs behind the status and navigation bars: their icons follow it rather than
+        // dark mode, since the reminder's background stays light in dark mode too.
+        val barStyle = if (backgroundColor.luminance() > 0.5f) {
+            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+        } else {
+            SystemBarStyle.dark(Color.TRANSPARENT)
+        }
+        SideEffect { enableEdgeToEdge(barStyle, barStyle) }
+
         Surface(
             modifier = Modifier.fillMaxSize(),
             color = backgroundColor
@@ -163,6 +176,7 @@ class AlarmActivity : AppCompatActivity() {
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .safeDrawingPadding()
                     .verticalScroll(rememberScrollState())
                     .padding(24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,

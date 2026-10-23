@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.net.toUri
 import androidx.core.app.NotificationManagerCompat
 import io.github.dallanoce.medreminder.R
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * The dose notification is what makes the alarm audible: it rings on the alarm stream and repeats
@@ -30,9 +31,18 @@ object AlarmNotifications {
     const val EXTRA_IS_REMINDER = "IS_REMINDER"
     const val EXTRA_REMINDER_OFFSET = "REMINDER_OFFSET"
 
+    // Alarms handled (Taken / Snooze / OK) since their notification was last posted.
+    private val handled = ConcurrentHashMap.newKeySet<Int>()
+
     fun notificationId(medId: Int, isReminder: Boolean): Int =
         if (isReminder) medId + AlarmScheduler.REMINDER_ID_OFFSET else medId
 
+    /**
+     * [fullScreen]: whether the notification opens the alarm screen by itself (full-screen intent).
+     * While the screen is on the system only shows it as a heads-up, and a full-screen intent keeps
+     * that heads-up on top of everything until swiped away: leave it out when the app opens the alarm
+     * screen itself, so the heads-up times out instead of covering the alarm screen.
+     */
     fun show(
         context: Context,
         medName: String,
@@ -40,10 +50,12 @@ object AlarmNotifications {
         userName: String?,
         isReminder: Boolean,
         reminderOffset: Int,
-        ringtoneUri: String?
+        ringtoneUri: String?,
+        fullScreen: Boolean
     ) {
         val channelId = if (isReminder) ensureReminderChannel(context) else ensureDoseChannel(context, ringtoneUri)
         val id = notificationId(medId, isReminder)
+        handled.remove(id)
 
         val alarmScreen = PendingIntent.getActivity(
             context,
@@ -67,10 +79,13 @@ object AlarmNotifications {
             .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
             .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
-            .setFullScreenIntent(alarmScreen, true)
             .setContentIntent(alarmScreen)
             .setAutoCancel(false)
             .setOngoing(true)
+
+        if (fullScreen) {
+            builder.setFullScreenIntent(alarmScreen, true)
+        }
 
         if (isReminder) {
             builder.addAction(0, context.getString(R.string.alarm_ok_btn),
@@ -95,9 +110,14 @@ object AlarmNotifications {
         }
     }
 
+    /** Called whenever an alarm is handled, from the alarm screen or from the notification. */
     fun cancel(context: Context, medId: Int, isReminder: Boolean) {
+        handled.add(notificationId(medId, isReminder))
         NotificationManagerCompat.from(context).cancel(notificationId(medId, isReminder))
     }
+
+    /** Whether the alarm was handled since its notification was posted. */
+    fun wasHandled(medId: Int, isReminder: Boolean): Boolean = notificationId(medId, isReminder) in handled
 
     /**
      * Whether the posted notification is sounding the alarm. When it isn't (the user turned off the
